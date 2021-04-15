@@ -6,7 +6,7 @@ draft: false
 
 ## CS:GO
 
-My Autoexec.cfg: [joshwprice.com/autoexec](https://drive.google.com/file/d/0B83cNlg4zAwKSkY2VzMtSFJFT1k/view)
+My autoexec.cfg: [joshwprice.com/autoexec](https://drive.google.com/file/d/0B83cNlg4zAwKSkY2VzMtSFJFT1k/view)
 
 ## osu!
 
