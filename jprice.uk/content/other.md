@@ -12,7 +12,7 @@ My Autoexec.cfg: [autoexec.joshwprice.com](https://autoexec.joshwprice.com)
 
 Profile: [CrypticInsanity](https://osu.ppy.sh/users/11508900)
 
-Skin: [kyoki.joshwprice.com](https://drive.google.com/file/d/1GnT663jh1M_Yr9chNgySJOxBd94tW24g/view)
+Skin: [joshwprice.com/kyoki](https://drive.google.com/file/d/1GnT663jh1M_Yr9chNgySJOxBd94tW24g/view)
 
 ## Anime
 
