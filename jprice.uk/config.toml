@@ -13,9 +13,9 @@ theme = "PaperMod"
         imageUrl = "/Joshua Price - 2021.webp"
         imageTitle = "Maki Nishikino"
         
-    #[[params.socialIcons]]
-    #    name = "steam"
-    #    url = "https://steamcommunity.com/id/crypticinsanity/"
+    [[params.socialIcons]]
+        name = "steam"
+        url = "https://steamcommunity.com/id/crypticinsanity/"
     [[params.socialIcons]]
         name = "email"
         url = "mailto:joshuapricew@gmail.com"
