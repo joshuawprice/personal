@@ -1,0 +1,35 @@
+baseURL = "https://www.kruitana.com/"
+languageCode = "en-us"
+title = "kruitana"
+theme = "PaperMod"
+
+[params]
+    env = "production"
+    enableRobotsTXT = true
+    description = "Links to my socials and more."
+    [params.profileMode]
+        enabled = true
+        subtitle = "Discord: Josh | CrypticInsanity#8219"
+        imageUrl = "/Maki Nishikino.webp"
+        imageTitle = "Maki Nishikino"
+        
+    [[params.socialIcons]]
+        name = "steam"
+        url = "https://steamcommunity.com/id/crypticinsanity/"
+    [[params.socialIcons]]
+        name = "email"
+        url = "mailto:joshuapricew@gmail.com"
+
+[menu]
+    [[menu.main]]
+        identifier = "other"
+        name = "Other"
+        url = "/other"
+        weight = 5
+    #[[menu.main]]
+    #    identifier = "posts"
+    #    name = "Posts"
+    #    url = "/posts/"
+    #    weight = 10
+
+# vim: shiftwidth=4 expandtab autoindent
