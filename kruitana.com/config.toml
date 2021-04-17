@@ -16,9 +16,9 @@ theme = "PaperMod"
     [[params.socialIcons]]
         name = "steam"
         url = "https://steamcommunity.com/id/crypticinsanity/"
-    [[params.socialIcons]]
-        name = "email"
-        url = "mailto:joshuapricew@gmail.com"
+    #[[params.socialIcons]]
+    #    name = "email"
+    #    url = "mailto:joshuapricew@gmail.com"
 
 [menu]
     [[menu.main]]
