@@ -6,13 +6,13 @@ draft: false
 
 ## CS:GO
 
-My autoexec.cfg: [kruitana.com/autoexec](https://drive.google.com/file/d/0B83cNlg4zAwKSkY2VzMtSFJFT1k/view)
+My autoexec.cfg: [kruitana.com/autoexec](https://asgard.joshwprice.com/autoexec.cfg)
 
 ## osu!
 
 Profile: [CrypticInsanity](https://osu.ppy.sh/users/11508900)
 
-Skin: [kruitana.com/kyoki](https://drive.google.com/file/d/1GnT663jh1M_Yr9chNgySJOxBd94tW24g/view)
+Skin: [kruitana.com/kyoki](https://asgard.kruitana.com/Kyoki.osk)
 
 ## Anime
 
