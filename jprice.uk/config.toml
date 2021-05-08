@@ -9,7 +9,7 @@ theme = "PaperMod"
     description = "Links to my socials and more."
     [params.profileMode]
         enabled = true
-        subtitle = "Discord: Josh | CrypticInsanity#8219"
+        #subtitle = "Discord: Josh | CrypticInsanity#8219"
         imageUrl = "/Joshua Price - 2021.webp"
         imageTitle = "Maki Nishikino"
         
