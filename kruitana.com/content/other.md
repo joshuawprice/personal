@@ -4,6 +4,10 @@
 draft: false
 ---
 
+## Anime
+
+My AniList: [CrypticInsanity](https://anilist.co/user/CrypticInsanity/animelist)
+
 ## CS:GO
 
 My autoexec.cfg: [kruitana.com/autoexec](https://asgard.kruitana.com/autoexec.cfg)
@@ -13,7 +17,3 @@ My autoexec.cfg: [kruitana.com/autoexec](https://asgard.kruitana.com/autoexec.cf
 Profile: [CrypticInsanity](https://osu.ppy.sh/users/11508900)
 
 Skin: [kruitana.com/kyoki](https://asgard.kruitana.com/Kyoki.osk)
-
-## Anime
-
-My AniList: [CrypticInsanity](https://anilist.co/user/CrypticInsanity/animelist)
