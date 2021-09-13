@@ -6,7 +6,7 @@ draft: false
 
 ## Anime
 
-My AniList: [CrypticInsanity](https://anilist.co/user/CrypticInsanity/animelist)
+My AniList: [kruitana](https://anilist.co/user/882128/animelist)
 
 ## CS:GO
 
