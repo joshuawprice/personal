@@ -1,0 +1,2 @@
+# Ignore hugo build lock file
+.hugo_build.lock
