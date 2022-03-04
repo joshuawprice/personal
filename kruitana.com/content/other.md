@@ -10,10 +10,10 @@ My AniList: [Kruitana](https://anilist.co/user/882128/animelist)
 
 ## CS:GO
 
-My autoexec.cfg: [kruitana.com/autoexec](https://asgard.kruitana.com/autoexec.cfg)
+My autoexec.cfg: [kruitana.com/autoexec](https://files.kruitana.com/autoexec.cfg)
 
 ## osu!
 
 Profile: [CrypticInsanity](https://osu.ppy.sh/users/11508900)
 
-Skin: [kruitana.com/kyoki](https://asgard.kruitana.com/Kyoki.osk)
+Skin: [kruitana.com/kyoki](https://files.kruitana.com/Kyoki.osk)
