@@ -14,6 +14,6 @@ My autoexec.cfg: [kruitana.com/autoexec](https://files.kruitana.com/autoexec.cfg
 
 ## osu!
 
-Profile: [CrypticInsanity](https://osu.ppy.sh/users/11508900)
+Profile: [Kruitana](https://osu.ppy.sh/users/11508900)
 
 Skin: [kruitana.com/kyoki](https://files.kruitana.com/Kyoki.osk)
