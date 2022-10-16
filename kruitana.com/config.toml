@@ -39,4 +39,4 @@ theme = "PaperMod"
     #    url = "/posts/"
     #    weight = 10
 
-# vim: shiftwidth=4 expandtab autoindent
+# vim: tabstop=4 shiftwidth=4 expandtab autoindent
