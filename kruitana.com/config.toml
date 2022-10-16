@@ -15,6 +15,12 @@ theme = "PaperMod"
         imageTitle = "Maki Nishikino"
         
     [[params.socialIcons]]
+        name = "anilist"
+        url = "https://anilist.co/user/882128/animelist"
+    [[params.socialIcons]]
+        name = "osu!"
+        url = "https://osu.ppy.sh/users/11508900"
+    [[params.socialIcons]]
         name = "steam"
         url = "https://steamcommunity.com/id/kruitana/"
     #[[params.socialIcons]]
