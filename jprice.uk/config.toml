@@ -19,7 +19,7 @@ theme = "PaperMod"
     #    url = "https://steamcommunity.com/id/crypticinsanity/"
     [[params.socialIcons]]
         name = "email"
-        url = "mailto:joshuapricew@gmail.com"
+        url = "mailto:contact@jprice.uk"
 
 [menu]
     #[[menu.main]]
