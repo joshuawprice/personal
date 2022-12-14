@@ -9,3 +9,4 @@
 
 ## Chapter 3
 1. fahrenheit_to_celsius
+2. fibonacci
