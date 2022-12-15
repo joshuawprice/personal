@@ -10,3 +10,4 @@
 ## Chapter 3
 1. fahrenheit_to_celsius
 2. fibonacci
+3. twelve_days_of_christmas
