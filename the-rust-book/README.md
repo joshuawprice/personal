@@ -11,3 +11,6 @@
 1. fahrenheit_to_celsius
 2. fibonacci
 3. twelve_days_of_christmas
+
+# Chapter 5
+1. struct_example
