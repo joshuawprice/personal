@@ -14,3 +14,6 @@
 
 # Chapter 5
 1. struct_example
+
+# Chapter 8
+1. challenge_8_1
