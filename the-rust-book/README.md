@@ -12,9 +12,9 @@
 2. fibonacci
 3. twelve_days_of_christmas
 
-# Chapter 5
+## Chapter 5
 1. struct_example
 
-# Chapter 8
+## Chapter 8
 1. challenge_8_1
 2. challenge_8_2
