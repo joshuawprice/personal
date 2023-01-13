@@ -17,3 +17,4 @@
 
 # Chapter 8
 1. challenge_8_1
+2. challenge_8_2
