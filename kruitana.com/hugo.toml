@@ -10,13 +10,16 @@ theme = "PaperMod"
     hideFooter = true
     [params.profileMode]
         enabled = true
-        subtitle = "Discord: Josh | Kruitana#8219"
+        #subtitle = "Discord: Josh | Kruitana#8219"
         imageUrl = "/Maki Nishikino.webp"
         imageTitle = "Maki Nishikino"
         
     [[params.socialIcons]]
         name = "anilist"
         url = "https://anilist.co/user/882128/animelist"
+    [[params.socialIcons]]
+        name = "discord"
+        url = "https://discordapp.com/users/152856663911563264"
     [[params.socialIcons]]
         name = "osu!"
         url = "https://osu.ppy.sh/users/11508900"
