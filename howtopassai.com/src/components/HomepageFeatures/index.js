@@ -11,7 +11,7 @@ const FeatureList = [
     description: (
       <Link
         className="button button--secondary button--lg"
-        to="/docs/ai">
+        to="/docs/algorithms">
         Algorithms
       </Link>
     ),
@@ -22,7 +22,7 @@ const FeatureList = [
     description: (
       <Link
         className="button button--secondary button--lg"
-        to="/docs/algorithms">
+        to="/docs/ai">
         Artificial Intelligence
       </Link>
     ),
