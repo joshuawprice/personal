@@ -15,5 +15,5 @@ We can also add “effectiveness”: every instruction must be basic enough and 
 
 $$n! \gg 2^n \gg n^3 \gg n^2 \gg n\log{n} \gg n \gg \log{n} \gg 1$$
 
-<img src="/img/algorithms/big-o-functions.png" width="50%"/>
+<img src="/img/algorithms/big-o-functions.png" width="500px"/>
 
