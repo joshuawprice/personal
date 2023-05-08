@@ -56,9 +56,9 @@ In a for loop there are 2 considerations to make:
 | Statement              | Steps/execution<br/>(s/e) | Frequency | Total steps |
 | ---------------------- | --------------------- | --------- | ----------- |
 | 1. Algorithm Sum(a, n) | $0$                   | $-$       | $-$         |
-| 2. s := 0;             | $1$                   | $1$       | $1$         |
-| 3. for i = 1 to n do  | $1$                   | $n + 1$   | $n + 1$     |
-| 4.   s := s + a\[i\];  | $1$                   | $n$       | $n$         |
+| 2. s := 0              | $1$                   | $1$       | $1$         |
+| 3. for i = 1 to n do   | $1$                   | $n + 1$   | $n + 1$     |
+| 4.   s := s + a\[i\]  | $1$                   | $n$       | $n$         |
 | 5. return s;           | $1$                   | $1$       | $1$         |
 
 | Total | $2n + 3$ |
@@ -78,9 +78,21 @@ Applications of sorting:
 
 ### (Loop) invariant
 
-In an iterative algorithm, a loop invariant is a property that is maintained throughout the computation. It also exists for recursive design, it’s then just called an invariant. It is usually an easier or smaller instance of the final problem you are trying to solve which the algorithm expand at each iteration until you have solved the entire problem (which will be given by the breaking condition of the loop or recursive calls). This is a very useful algorithm design tool, but can also be used to prove the correctness of an algorithm.
+In an iterative algorithm, a loop invariant is a property that is maintained throughout the computation. In recursive design it's just called an invariant. It is usually an easier or smaller instance of the final problem you are trying to solve which the algorithm expand at each iteration until you have solved the entire problem (which will be given by the breaking condition of the loop or recursive calls). This is a very useful algorithm design tool, but can also be used to prove the correctness of an algorithm.
 
 
 ## Tail recursion
 
 Tail recursion can be used to remove multiple recursive calls in a recursive algorithm implementation, thereby significantly shrinking the tree size. See [tail recursive fibonacci](./fibonacci-sequence) on the fibonacci page.
+
+
+## Recurrence relations
+
+| Recurrence relation solution       | Algorithm                             | Big-Oh                  |
+| ---------------------------------- | ------------------------------------- | ----------------------- |
+| $T(n) = T(n/2) + \mathcal{O}(1)$   | Binary search                         | $\mathcal{O}(\log{n})$  |
+| $T(n) = T(n-1) + \mathcal{O}(1)$   | Recursive sum                         | $\mathcal{O}(n)$        |
+| $T(n) = 2 T(n/2) + \mathcal{O}(1)$ | Tree traversal                        | $\mathcal{O}(n)$        |
+| $T(n) = T(n-1) + \mathcal{O}(n)$   | $n^2$ sorting algorithms              | $\mathcal{O}(n^2)$      |
+| $T(n) = 2 T(n/2) + \mathcal{O}(n)$ | Merge sort (& average case quicksort) | $\mathcal{O}(n\log{n})$ |
+| $T(n) = 2 T(n-1) + \mathcal{O}(1)$ | Binary (search) tree construction     | $\mathcal{O}(2^n)$      |
