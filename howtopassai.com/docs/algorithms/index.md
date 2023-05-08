@@ -25,4 +25,15 @@ $$n! \gg 3^n \gg 2^n \gg n^3 \gg n^2 \gg n\log{n} \gg n \gg \log{n} \gg 1$$
 
 ## Space complexity
 
+The space needed for the algorithms is seen to be the sum of the following components:
+1. **A fixed space part** that does not depend on the characteristics of the algorithm inputs and outputs. This part includes instruction space (i.e. the space of the code, space for static variables and constants, etc.)
+2. **A variable space part** consists of the size of the variables which depend on a particular problem instance being solved: the space needed by allocated and referenced variables, and the recursive stack space.
+
+When analyzing the **space complexity** of an algorithm, we concentrate solely on estimating the variable part.
+
+Any time memory is allocated dynamically, whether through manual allocation or by adding levels to the stack there is the possibility the space complexity of the algorithm will increase.
+
+When given a choice between best or worst time complexity, usually the worst is more useful.
+
+## Time complexity
 
