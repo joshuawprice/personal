@@ -11,9 +11,18 @@ An algorithm is a finite set of instructions that, if followed, accomplishes a p
 
 We can also add “effectiveness”: every instruction must be basic enough and feasible. Ideally a person using only pencil and paper should be able to carry it out.
 
+- Algorithms: always produce a correct result.
+- Heuristics: may usually do a good job, but without providing any guarantee.
+
 ## Function growth
 
-$$n! \gg 2^n \gg n^3 \gg n^2 \gg n\log{n} \gg n \gg \log{n} \gg 1$$
+$$n! \gg 3^n \gg 2^n \gg n^3 \gg n^2 \gg n\log{n} \gg n \gg \log{n} \gg 1$$
 
 <img src="/img/algorithms/big-o-functions.png" width="500px"/>
+
+- The space complexity of an algorithm is the amount of memory it needs to run to completion.
+- The time complexity of an algorithm is the amount of computer time it needs to run to completion.
+
+## Space complexity
+
 
