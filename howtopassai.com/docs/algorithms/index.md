@@ -20,11 +20,10 @@ $$n! \gg 3^n \gg 2^n \gg n^3 \gg n^2 \gg n\log{n} \gg n \gg \log{n} \gg 1$$
 
 <img src="/img/algorithms/big-o-functions.png" width="500px"/>
 
-- The space complexity of an algorithm is the amount of memory it needs to run to completion.
-- The time complexity of an algorithm is the amount of computer time it needs to run to completion.
 
 ## Space complexity
 
+The space complexity of an algorithm is the amount of memory it needs to run to completion.
 The space needed for the algorithms is seen to be the sum of the following components:
 1. **A fixed space part** that does not depend on the characteristics of the algorithm inputs and outputs. This part includes instruction space (i.e. the space of the code, space for static variables and constants, etc.)
 2. **A variable space part** consists of the size of the variables which depend on a particular problem instance being solved: the space needed by allocated and referenced variables, and the recursive stack space.
@@ -37,6 +36,7 @@ When given a choice between best or worst time complexity, usually the worst is 
 
 ## Time complexity
 
+The time complexity of an algorithm is the amount of computer time it needs to run to completion.
 A program step is a meaningful segment of a program.
 Although simple operations like addition or multiplication can take different time on a particular machine, we consider such primitive operations as single steps --> then we can count the number of program steps.
 
@@ -73,3 +73,9 @@ Applications of sorting:
 - Frequency distribution: Given a set of n numbers, which element occurs the largest number of times?
 - Selection: What is the kth largest number in an array?
 
+
+## Algorithm design tools
+
+### (Loop) invariant
+
+In an iterative algorithm, a loop invariant is a property that is maintained throughout the computation. It also exists for recursive design, it’s then just called an invariant. It is usually an easier or smaller instance of the final problem you are trying to solve which the algorithm expand at each iteration until you have solved the entire problem (which will be given by the breaking condition of the loop or recursive calls). This is a very useful algorithm design tool, but can also be used to prove the correctness of an algorithm.
