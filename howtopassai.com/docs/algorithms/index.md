@@ -38,7 +38,7 @@ When given a choice between best or worst time complexity, usually the worst is 
 
 The time complexity of an algorithm is the amount of computer time it needs to run to completion.
 A program step is a meaningful segment of a program.
-Although simple operations like addition or multiplication can take different time on a particular machine, we consider such primitive operations as single steps --> then we can count the number of program steps.
+Although simple operations like addition or multiplication can take different time on a particular machine, we consider such primitive operations as single steps $\rightarrow$ then we can count the number of program steps.
 
 Example: `return a+b+b*c+(a+b-c)/(a+b)+4.0;` can be considered to take only 1 step.
 
@@ -48,7 +48,7 @@ More complex control statements (for, while, and repeat loops for example) we co
 
 In a for loop there are 2 considerations to make: 
 1. The cardinality of the set: $\text{last element index} - \text{first element index} + 1$
-    - Example: $S= \{1, 2, \ldots, n\} \rightarrow cardinal(S) = n-1 +1=n$
+    - Example: $S= \{1, 2, \ldots, n\} \rightarrow \text{cardinal}(S) = n-1 +1=n$
 2. The breaking condition of the for loop. This must be tested 1 extra time for the program to leave this code behind.
 
 ### Example
@@ -79,3 +79,8 @@ Applications of sorting:
 ### (Loop) invariant
 
 In an iterative algorithm, a loop invariant is a property that is maintained throughout the computation. It also exists for recursive design, it’s then just called an invariant. It is usually an easier or smaller instance of the final problem you are trying to solve which the algorithm expand at each iteration until you have solved the entire problem (which will be given by the breaking condition of the loop or recursive calls). This is a very useful algorithm design tool, but can also be used to prove the correctness of an algorithm.
+
+
+## Tail recursion
+
+Tail recursion can be used to remove multiple recursive calls in a recursive algorithm implementation, thereby significantly shrinking the tree size. See [tail recursive fibonacci](./fibonacci-sequence) on the fibonacci page.

@@ -1,12 +1,17 @@
 # Euclidean algorithm
 
+The Euclidean algorithm is a recursive method to find the greatest common divisor (GCD) of two integers by repeatedly applying the modulo operation until the remainder becomes zero, at which point the GCD is the last non-zero remainder.
+
+
 ## Complexity analysis
 
-Iterative space complexity: $\mathcal{O}(1)$
-
-Recursive best case space complexity: $\mathcal{O}(1)$
-
-Recursive worst case space complexity: $\mathcal{O}(\log{n})$
+1. Space complexity
+    - Iterative: $\mathcal{O}(1)$
+    - Recursive best case: $\mathcal{O}(1)$
+    - Recursive worst case: $\mathcal{O}(\log{n})$
+2. Time complexity
+    - Best case: $\mathcal{O}(1)$
+    - Worst case: $\mathcal{O}(\log{n})$
 
 
 ## Pseudocode
@@ -14,28 +19,26 @@ Recursive worst case space complexity: $\mathcal{O}(\log{n})$
 Iterative implementation:
 
 ```
-Algorithm gcd(m, n) {
-    rem = m mod n;
-    while(rem > 0) {
-	    m = n;
-		n = rem;
-		rem = m mod n;
-	}
-	return n;
-}
+Algorithm gcd(m, n)
+
+1: rem = m % n
+2: while rem > 0
+3:     m = n
+4:     n = rem
+5:     rem = m % n
+6: return n
 ```
 
 Recursive implementation:
 
 ```
-Algorithm gcd(m, n) {
-	rem = m mod n;
-	if (rem = 0) {
-		return n;
-	else {
-		return gcd(n, rem)
-	}
-}
+Algorithm gcd(m, n)
+
+1: rem = m mod n
+2: if rem == 0
+3:     return n;
+4: else
+5:     return gcd(n, rem)
 ```
 
 
