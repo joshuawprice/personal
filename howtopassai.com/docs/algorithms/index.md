@@ -48,5 +48,28 @@ More complex control statements (for, while, and repeat loops for example) we co
 
 In a for loop there are 2 considerations to make: 
 1. The cardinality of the set: $\text{last element index} - \text{first element index} + 1$
-    - Example 1: $S= \{1, 2, \ldots, n\} \rightarrow cardinal(S) = n-1 +1=n$
+    - Example: $S= \{1, 2, \ldots, n\} \rightarrow cardinal(S) = n-1 +1=n$
 2. The breaking condition of the for loop. This must be tested 1 extra time for the program to leave this code behind.
+
+### Example
+
+| Statement              | Steps/execution<br/>(s/e) | Frequency | Total steps |
+| ---------------------- | --------------------- | --------- | ----------- |
+| 1. Algorithm Sum(a, n) | $0$                   | $-$       | $-$         |
+| 2. s := 0;             | $1$                   | $1$       | $1$         |
+| 3. for i = 1 to n do  | $1$                   | $n + 1$   | $n + 1$     |
+| 4.   s := s + a\[i\];  | $1$                   | $n$       | $n$         |
+| 5. return s;           | $1$                   | $1$       | $1$         |
+
+| Total | $2n + 3$ |
+| ----- | -------- |
+
+## Sorting
+
+Applications of sorting:
+- Searching (for sorted data, searching takes just log n time)
+- Closest pair: among n numbers, which pair have the smallest difference between them?
+- Element uniqueness: Are there any duplicates in a given set?
+- Frequency distribution: Given a set of n numbers, which element occurs the largest number of times?
+- Selection: What is the kth largest number in an array?
+

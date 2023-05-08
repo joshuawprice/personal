@@ -1,4 +1,4 @@
-# Euclid's GCD
+# Euclidean algorithm
 
 ## Complexity analysis
 
@@ -41,19 +41,6 @@ Algorithm gcd(m, n) {
 
 ## Python
 
-Recursive implementation:
-
-```python
-def gcd(m, n):
-    if n > m:
-        m, n = n, m
-
-    if n == 0:
-        return m
-
-    return gcd(n, m % n)
-```
-
 Iterative implementation:
 
 ```python
@@ -67,8 +54,37 @@ def it_gcd(m, n):
     return m
 ```
 
+Recursive implementation:
+
+```python
+def gcd(m, n):
+    if n > m:
+        m, n = n, m
+
+    if n == 0:
+        return m
+
+    return gcd(n, m % n)
+```
+
 
 ## Rust
+
+Iterative implementation:
+
+```rust
+fn gcd(mut m: i32, mut n: i32) -> i32 {
+    if n > m {
+        (m, n) = (n, m);
+    }
+
+    while n != 0 {
+        (m, n) = (n, m % n)
+    }
+
+    m
+}
+```
 
 Recursive implementation:
 
@@ -84,22 +100,6 @@ fn gcd(mut m: i32, mut n: i32) -> i32 {
     }
 
     gcd(n, m % n)
-}
-```
-
-Iterative implementation:
-
-```rust
-fn gcd(mut m: i32, mut n: i32) -> i32 {
-    if n > m {
-        (m, n) = (n, m);
-    }
-
-    while n != 0 {
-        (m, n) = (n, m % n)
-    }
-
-    m
 }
 ```
 

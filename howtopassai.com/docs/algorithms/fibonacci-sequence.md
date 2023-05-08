@@ -2,10 +2,12 @@
 
 ## Complexity analysis
 
-Iterative space complexity: $\mathcal{O}(1)$
-
-Recursive space complexity: $\mathcal{O}(n)$
-
+1. Space complexity
+    - Iterative: $\mathcal{O}(1)$
+    - Recursive: $\mathcal{O}(n)$
+2. Time complexity
+    - Iterative $\mathcal{O}(n)$
+    - Recursive: $\mathcal{O}(2^n)$
 
 ## Pseudocode
 
