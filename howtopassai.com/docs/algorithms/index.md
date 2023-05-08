@@ -37,3 +37,16 @@ When given a choice between best or worst time complexity, usually the worst is 
 
 ## Time complexity
 
+A program step is a meaningful segment of a program.
+Although simple operations like addition or multiplication can take different time on a particular machine, we consider such primitive operations as single steps --> then we can count the number of program steps.
+
+Example: `return a+b+b*c+(a+b-c)/(a+b)+4.0;` can be considered to take only 1 step.
+
+An assignment statement (with no calls to other functions) takes 1 step.
+Simple control statements (like if, else, switch with no calls to other functions in the condition) take 1 step.
+More complex control statements (for, while, and repeat loops for example) we consider the step counts only for the control part of the statement.
+
+In a for loop there are 2 considerations to make: 
+1. The cardinality of the set: $\text{last element index} - \text{first element index} + 1$
+    - Example 1: $S= \{1, 2, \ldots, n\} \rightarrow cardinal(S) = n-1 +1=n$
+2. The breaking condition of the for loop. This must be tested 1 extra time for the program to leave this code behind.
