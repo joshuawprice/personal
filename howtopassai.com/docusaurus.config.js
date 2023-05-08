@@ -90,11 +90,11 @@ const config = {
           //   position: 'left',
           //   label: 'Tutorial',
           // },
-          {
-            href: 'https://github.com/joshuawprice/howtopassai.com',
-            label: 'GitHub',
-            position: 'right',
-          },
+          // {
+          //   href: 'https://github.com/joshuawprice/howtopassai.com',
+          //   label: 'GitHub',
+          //   position: 'right',
+          // },
         ],
       },
       // footer: {
