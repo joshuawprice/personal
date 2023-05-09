@@ -10,7 +10,13 @@ Not stable with in-place sort.
 
 ## Complexity analysis
 
+## Quick sort
 
+1. Space complexity
+2. Time complexity
+    - Best case: $\mathcal{O}(n\log{n})$
+    - Average case: $\mathcal{O}(n\log{n})$
+    - Worst case: $\mathcal{O}(n^2)$
 
 ### Partition algorithm
 
