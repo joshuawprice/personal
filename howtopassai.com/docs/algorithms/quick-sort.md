@@ -13,7 +13,6 @@ Not stable with in-place sort.
 ## Quick sort
 
 1. Space complexity
-    - 
 2. Time complexity
     - Best case: $\mathcal{O}(n\log{n})$
     - Average case: $\mathcal{O}(n\log{n})$
