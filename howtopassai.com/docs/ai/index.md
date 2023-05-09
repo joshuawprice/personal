@@ -174,9 +174,9 @@ Complete: provided the cost of every step exceeds some small positive constant. 
 
 Optimal: uniform-cost search expands nodes in order of their optimal path cost. So, the first goal node selected for expansion will be the optimal solution. 
 
-Time and Space Complexity: let C∗ be the cost of the optimal solution, and assume that every action costs at least e. Then the algorithm’s worst-case time and space complexity is O(b1+ ⌊C*/e⌋), which can be much greater than bd.  
+Time and Space Complexity: let C∗ be the cost of the optimal solution, and assume that every action costs at least e. Then the algorithm’s worst-case time and space complexity is O(b1+ "C*/e"), which can be much greater than bd.  
  
-When all step costs are equal, b1+⌊C*/e⌋ is just bd+1.  
+When all step costs are equal, b1+"C*/e" is just bd+1.  
  
 When all step costs are the same, uniform-cost search is similar to BFS, but BFS stops as soon as it generates a goal, whereas uniform-cost search examines all the nodes at the goal’s depth to see if one has a lower cost. 
  
