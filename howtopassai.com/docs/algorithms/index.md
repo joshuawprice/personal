@@ -61,8 +61,9 @@ In a for loop there are 2 considerations to make:
 | 4.     s := s + a\[i\] | $1$                   | $n$       | $n$         |
 | 5. return s;           | $1$                   | $1$       | $1$         |
 
-| Total | $2n + 3$ |
-| ----- | -------- |
+| Total    | Big-Oh           |
+| -------- | ---------------- |
+| $2n + 3$ | $\mathcal{O}(n)$ |
 
 ## Sorting
 

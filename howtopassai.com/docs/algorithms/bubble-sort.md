@@ -1,5 +1,7 @@
 # Bubble sort
 
+Bubble sort is an algorithm to order an array by repeatedly scanning it while moving numbers largest than their predecessor by swapping them.
+
 ## Complexity analysis
 
 1. Space complexity
