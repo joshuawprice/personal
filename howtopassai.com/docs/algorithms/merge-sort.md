@@ -1,5 +1,9 @@
 # Merge sort
 
+Recursively splits an input array into smaller subarrays, sorts them independently, and then merges the sorted subarrays to produce the final sorted array.
+
+Is a stable sort.
+
 ## Complexity analysis
 
 ### Merge sort

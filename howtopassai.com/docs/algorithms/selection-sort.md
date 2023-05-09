@@ -4,12 +4,15 @@ Iterates finding the minimum (or maximum) element from the unsorted subarray and
 
 Loop invariant: the portion of the array considered so far is always sorted.
 
+Not a stable sort with basic in-place implementation. Can be made stable with additional $\mathcal{O}(n)$ memory space.
+
 ## Complexity analysis
 
 1. Space complexity
     - $\mathcal{O}(1)$
 2. Time complexity
     - $\mathcal{O}(n^2)$
+
 
 ## Pseudocode
 

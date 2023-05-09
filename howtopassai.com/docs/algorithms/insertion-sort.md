@@ -4,6 +4,8 @@ Iterates through the array, taking each element, comparing it to elements in the
 
 Loop invariant: the portion of the array considered so far is always sorted.
 
+Is a stable sort.
+
 ## Complexity analysis
 
 1. Space complexity
