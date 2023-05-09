@@ -1,6 +1,6 @@
 # Artificial Intelligence
 
-/*
+{/*
 
 ## What is an agent? 
 
@@ -263,7 +263,7 @@ Time complexity using BFS in both directions is O(bd/2). The space complexity is
 Bidirectional search requires a method for computing the predecessors of a state x: i.e. 
 all those states that have x as a successor. 
 
-*/
+*/}
 
  
 
