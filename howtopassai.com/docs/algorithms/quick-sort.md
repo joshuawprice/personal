@@ -2,6 +2,8 @@
 
 Parition algorithm moves values to either side of a pivot, which can be chosen in a vartiety of ways, such as the first value in the array, a random value etc. (in the pseudocode we use the first value). Then does it again recursively until the array is of size 1, then we know everything is sorted.
 
+Loop invariant of the partition algorithm: At the end of each iteration, the sub-array a\[m+1..i\] contains i values smaller than the pivot and the sub-array a[j..p] contains j values larger than the pivot.
+
 Sorts in place. (No auxilary array required.)
 
 Not stable with in-place sort.
