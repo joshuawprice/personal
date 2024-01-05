@@ -34,6 +34,21 @@ Trust me.";
     }
 }
 
+/// Returns all of the lines where exact query is found.
+///
+/// # Examples
+///
+/// ```
+/// let query = "fast";
+/// let contents = "\
+/// Rust:
+/// safe, fast, productive.
+/// Pick three.";
+///
+/// let results = minigrep::search(query, contents);
+///
+/// assert_eq!(vec!["safe, fast, productive."], results)
+/// ```
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     contents
         .lines()
@@ -41,6 +56,22 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
         .collect()
 }
 
+/// Returns all of the lines where case insensitive query is found.
+///
+/// # Examples
+///
+/// ```
+/// let query = "rUsT";
+/// let contents = "\
+/// Rust:
+/// safe, fast, productive.
+/// Pick three.
+/// Trust me.";
+///
+/// let results = minigrep::search_case_insensitive(query, contents);
+///
+/// assert_eq!(vec!["Rust:", "Trust me."], results)
+/// ```
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     contents
         .lines()
