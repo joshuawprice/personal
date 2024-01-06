@@ -25,4 +25,17 @@ fn main() {
         }
         println!();
     }
+
+    // let mut song_builder = String::from("And a partridge in a pear tree");
+
+    // for i in 0..twelve_gifts.len() {
+    //     println!("On the first day of Christmas my true love sent to me");
+    //     if i == 0 {
+    //         println!("{}", twelve_gifts[0]);
+    //     } else {
+    //         song_builder = twelve_gifts[i].to_owned() + ",\n" + &song_builder;
+    //         println!("{}", song_builder);
+    //     }
+    //     println!();
+    // }
 }
