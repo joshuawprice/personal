@@ -194,4 +194,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# vim: shiftwidth=4 expandtab autoindent
+# vim: shiftwidth=4 softtabstop=4 expandtab
