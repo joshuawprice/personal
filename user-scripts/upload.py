@@ -133,7 +133,10 @@ class Asgard(Uploader):
         else:
             print("Upload to asgard failed 3 times.")
             sys.exit(1)
-        print("https://files.kruitana.com/" + urllib.request.pathname2url(file.name))
+        print(
+            "https://files.kruitana.com/"
+            + urllib.request.pathname2url(file.name.rpartition("/")[2])
+        )
 
 
 class Catgirls(Uploader):
