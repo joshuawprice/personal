@@ -125,7 +125,7 @@ class Asgard(Uploader):
                         "-qo",
                         "ServerAliveInterval 3",
                         file.name,
-                        f"asgard.joshwprice.com:/opt/media/{self.location}/",
+                        f"admin@asgard.jprice.uk:/opt/media/{self.location}/",
                     ]
                 ).returncode
             ):
