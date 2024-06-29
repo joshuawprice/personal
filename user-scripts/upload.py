@@ -42,8 +42,7 @@ class SingleAppendAction(argparse.Action):
             return
 
         # Exit if Uploader is already in destinations
-        if any((isinstance(x, type(values))
-                for x in getattr(namespace, self.dest))):
+        if any((isinstance(x, type(values)) for x in getattr(namespace, self.dest))):
             return
 
         # Append values to destination then resave destinations
@@ -61,16 +60,28 @@ class SingleAppendConstAction(SingleAppendAction):
     once.
     """
 
-    def __init__(self, option_strings, dest, const,
-                 default=None, required=False, help=None, metavar=None):
-        super().__init__(option_strings=option_strings, dest=dest,
-                         nargs=0, const=const,
-                         default=default, required=required,
-                         help=help)
+    def __init__(
+        self,
+        option_strings,
+        dest,
+        const,
+        default=None,
+        required=False,
+        help=None,
+        metavar=None,
+    ):
+        super().__init__(
+            option_strings=option_strings,
+            dest=dest,
+            nargs=0,
+            const=const,
+            default=default,
+            required=required,
+            help=help,
+        )
 
     def __call__(self, parser, namespace, values, option_string=None):
-        super().__call__(parser, namespace,
-                         self.const, option_string)
+        super().__call__(parser, namespace, self.const, option_string)
 
 
 class Uploader(ABC):
@@ -98,30 +109,31 @@ class Asgard(Uploader):
         self.location = location
 
         # TODO: Look up ssh agents to check if SSH_ASKPASS is really required.
-        if (not os.getenv("SSH_ASKPASS")
-            and bool(subprocess.run([
-                "ssh-add", "-qL"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-                .returncode)):
-            print("SSH_ASKPASS is not set, upload to asgard may fail.",
-                  file=sys.stderr)
+        if not os.getenv("SSH_ASKPASS") and bool(
+            subprocess.run(
+                ["ssh-add", "-qL"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+            ).returncode
+        ):
+            print("SSH_ASKPASS is not set, upload to asgard may fail.", file=sys.stderr)
 
     def upload(self, file: BinaryIO) -> None:
         for i in range(3):
             if not bool(
-                    subprocess.run([
+                subprocess.run(
+                    [
                         "scp",
                         "-qo",
                         "ServerAliveInterval 3",
                         file.name,
-                        f"asgard.joshwprice.com:/opt/media/{self.location}/"])
-                    .returncode):
+                        f"asgard.joshwprice.com:/opt/media/{self.location}/",
+                    ]
+                ).returncode
+            ):
                 break
         else:
             print("Upload to asgard failed 3 times.")
             sys.exit(1)
-        print("https://files.kruitana.com/"
-              + urllib.request.pathname2url(file.name))
+        print("https://files.kruitana.com/" + urllib.request.pathname2url(file.name))
 
 
 class Catgirls(Uploader):
@@ -135,7 +147,8 @@ class Catgirls(Uploader):
             "https://catgirlsare.sexy/api/upload",
             data={"key": self.api_key},
             files={"file": file},
-            timeout=5)
+            timeout=5,
+        )
         try:
             r.raise_for_status()
         except requests.exceptions.HTTPError:
@@ -146,37 +159,72 @@ class Catgirls(Uploader):
 def main():
     # Start parsing options
     parser = argparse.ArgumentParser(
-        description="Uploads file to destination specified.")
+        description="Uploads file to destination specified."
+    )
     # Miscellaneous features
-    parser.add_argument("-n", "--notify", action="store_true",
-                        help="send a notification upon completion")
-    parser.add_argument("-c", "--clipboard", action="store_true",
-                        help="copy the response url to clipboard")
+    parser.add_argument(
+        "-n",
+        "--notify",
+        action="store_true",
+        help="send a notification upon completion",
+    )
+    parser.add_argument(
+        "-c",
+        "--clipboard",
+        action="store_true",
+        help="copy the response url to clipboard",
+    )
 
     # Add destinations for the script
     destinations = parser.add_argument_group(
         "destinations",
         """care should be taken when using arguments with optional values as
-        if it is given a valid file on your filesystem, it will ignore it""")
+        if it is given a valid file on your filesystem, it will ignore it""",
+    )
     destinations.add_argument(
-        "--0x0", action=SingleAppendConstAction, const=TheNullPointer(),
-        dest="destinations", help="upload to 0x0.st")
+        "--0x0",
+        action=SingleAppendConstAction,
+        const=TheNullPointer(),
+        dest="destinations",
+        help="upload to 0x0.st",
+    )
     destinations.add_argument(
-        "--x0", action=SingleAppendConstAction, const=X0(),
-        dest="destinations", help="upload to x0.at")
+        "--x0",
+        action=SingleAppendConstAction,
+        const=X0(),
+        dest="destinations",
+        help="upload to x0.at",
+    )
     destinations.add_argument(
-        "--asgard", action=SingleAppendAction, nargs='?',
-        const=".misc", type=Asgard, metavar="LOCATION",
-        dest="destinations", help="upload to asgard")
+        "--asgard",
+        action=SingleAppendAction,
+        nargs="?",
+        const=".misc",
+        type=Asgard,
+        metavar="LOCATION",
+        dest="destinations",
+        help="upload to asgard",
+    )
     destinations.add_argument(
-        "--catgirls", action=SingleAppendAction, nargs='?',
-        const="", type=Catgirls, metavar="API_KEY",
-        dest="destinations", help="upload to catgirlsare.sexy")
+        "--catgirls",
+        action=SingleAppendAction,
+        nargs="?",
+        const="",
+        type=Catgirls,
+        metavar="API_KEY",
+        dest="destinations",
+        help="upload to catgirlsare.sexy",
+    )
 
     # Finally, allow files to be uploaded, including - (stdin)
     parser.add_argument(
-        "files", type=argparse.FileType('rb'), action=FilesAction,
-        metavar="FILE", nargs="+", help="file to be uploaded")
+        "files",
+        type=argparse.FileType("rb"),
+        action=FilesAction,
+        metavar="FILE",
+        nargs="+",
+        help="file to be uploaded",
+    )
 
     # Save parsed arguments to args object
     args = parser.parse_intermixed_args()
