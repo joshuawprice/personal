@@ -396,4 +396,4 @@ if [[ -n ${stdin_file:-} ]]; then
 fi
 
 # TODO: Add trap cleanup function
-# vim: shiftwidth=4 expandtab autoindent
+# vim: shiftwidth=4 softtabstop=4 expandtab
