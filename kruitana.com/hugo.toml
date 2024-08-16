@@ -1,0 +1,48 @@
+baseURL = "https://www.kruitana.com/"
+languageCode = "en-us"
+title = "Kruitana"
+theme = "PaperMod"
+
+[params]
+    env = "production"
+    enableRobotsTXT = true
+    description = "Links to my socials and more."
+    hideFooter = true
+    [params.profileMode]
+        enabled = true
+        #subtitle = "Discord: Josh | Kruitana#8219"
+        imageUrl = "/Maki Nishikino.webp"
+        imageTitle = "Maki Nishikino"
+        
+    [[params.socialIcons]]
+        name = "anilist"
+        url = "https://anilist.co/user/882128/animelist"
+    [[params.socialIcons]]
+        name = "discord"
+        url = "https://discordapp.com/users/152856663911563264"
+    [[params.socialIcons]]
+        name = "osu!"
+        url = "https://osu.ppy.sh/users/11508900"
+    [[params.socialIcons]]
+        name = "steam"
+        url = "https://steamcommunity.com/id/kruitana/"
+    #[[params.socialIcons]]
+    #    name = "email"
+    #    url = "mailto:joshuapricew@gmail.com"
+
+[menu]
+    [[menu.main]]
+        identifier = "other"
+        name = "Other"
+        url = "/other"
+        weight = 5
+    #[[menu.main]]
+    #    identifier = "posts"
+    #    name = "Posts"
+    #    url = "/posts/"
+    #    weight = 10
+
+[minify]
+  minifyOutput = true
+
+# vim: tabstop=4 shiftwidth=4 expandtab autoindent
