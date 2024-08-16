@@ -1,0 +1,3 @@
+[submodule "Jonny - Python/Encryption"]
+	path = Jonny - Python/Encryption
+	url = git@github.com:joshuawprice/Encryption.git
