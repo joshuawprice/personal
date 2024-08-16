@@ -8,7 +8,7 @@
 # Destinations this script supports:
 # - 0x0.st
 # - x0.at
-# - asgard
+# - files
 # - catgirlsare.sexy
 
 # Uploader functions echo the final url of the destination and also append that to $urls
@@ -26,8 +26,7 @@ set -o errexit -o pipefail -o noclobber -o nounset
 
 # Variables - Ones that can be changed at runtime should not be readonly
 CATGIRLS_KEY=''
-readonly ASGARD_ROOT='/opt/media'
-ASGARD_PATH='.misc'
+FILES_PATH='misc'
 
 # Uploads single input file to 0x0
 0x0_upload() {
@@ -65,25 +64,15 @@ catgirls_upload() {
     echo "${urls[-1]}"
 }
 
-# Uploads single input file to asgard
-asgard_upload() {
+# Uploads single input file to file server
+files_upload() {
     # Upload file.
-    if [[ -z ${SSH_ASKPASS:-} ]] && ! ssh-add -qL >/dev/null 2>&1; then
-        error 0 "SSH_ASKPASS is not set, upload may fail."
-    fi
-    local fail_count=0
-    # TODO: Doesn't seem to allow custom folders?
-    until scp -qo "ServerAliveInterval 3" "${1}" "asgard.joshwprice.com:${ASGARD_ROOT}/${ASGARD_PATH}/"; do
-        ((fail_count++))
-        if [[ ${fail_count} = 3 ]]; then
-            error 1 "Upload to asgard failed 3 times"
-        fi
-    done
+    rclone copy "${1}" "b2:asgard1/${FILES_PATH}"
 
     # Save and output url.
     # 2021-01-15 Change to commented out line if something other than spaces breaks final link.
-    # urls+=( "https://asgard.kruitana.com/$(python -c 'import urllib.request, sys; print(urllib.request.pathname2url(sys.argv[1]))' "${1}")" )
-    urls+=( "https://asgard.kruitana.com/${1// /%20}" )
+    urls+=( "https://files.kruitana.com/$(python -c 'import urllib.request, sys; print(urllib.request.pathname2url(sys.argv[1]))' "${1}")" )
+    # urls+=( "https://files.kruitana.com/${1// /%20}" )
     echo "${urls[-1]}"
 }
 
@@ -165,8 +154,8 @@ Options:
  				  the name to be displayed by the notification
  --0x0				upload to 0x0
  --x0				upload to x0
- --asgard[=PATH]		upload to asgard; PATH is the file upload path
- 				  on asgard
+ --files[=PATH]		upload to file server; PATH is the file upload path
+ 				  on the file server
  --catgirls[=KEY]		upload to catgirlsare.sexy; KEY is the API Key
  	        		  required by catgirls for uploading
  -h, --help			display this help'
@@ -186,7 +175,7 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 OPTIONS=hcn::
-LONGOPTS=help,clipboard,notify::,0x0,x0,asgard::,catgirls::
+LONGOPTS=help,clipboard,notify::,0x0,x0,files::,catgirls::
 
 # regarding ! and PIPESTATUS see above
 # temporarily store output to be able to check for errors
@@ -251,16 +240,16 @@ while true; do
             shift
             ;;
 
-        --asgard)
+        --files)
             # Test if optional path is set, prioritising option passed in
             if [[ -n ${2} ]]; then
-                ASGARD_PATH="${2}"
+                FILES_PATH="${2}"
             fi
-            if [[ -z ${ASGARD_PATH:-} ]]; then
-                error 1 "No path set for asgard"
+            if [[ -z ${FILES_PATH:-} ]]; then
+                error 1 "No path set for files"
             fi
 
-            destinations+=(asgard)
+            destinations+=(files)
             shift 2
             ;;
 
@@ -278,7 +267,7 @@ while true; do
             ;;
 
         --)
-            readonly ASGARD_PATH
+            readonly FILES_PATH
             readonly CATGIRLS_KEY
 
             readonly destinations
@@ -336,10 +325,10 @@ if contains_element "0x0" "${destinations[@]}"; then
     done
 fi
 
-# If --asgard flag was passed, upload files to asgard
-if contains_element "asgard" "${destinations[@]}"; then
+# If --files flag was passed, upload files to file server
+if contains_element "files" "${destinations[@]}"; then
     for file in "$@"; do
-        asgard_upload "${file}"
+        files_upload "${file}"
     done
 fi
 
