@@ -1,3 +1,9 @@
 [submodule "Jonny - Python/Encryption"]
 	path = Jonny - Python/Encryption
 	url = git@github.com:joshuawprice/Encryption.git
+[submodule "jprice.uk/themes/PaperMod"]
+	path = jprice.uk/themes/PaperMod
+	url = https://github.com/adityatelange/hugo-PaperMod.git
+[submodule "kruitana.com/themes/PaperMod"]
+	path = kruitana.com/themes/PaperMod
+	url = https://github.com/adityatelange/hugo-PaperMod.git
