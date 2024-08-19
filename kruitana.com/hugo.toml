@@ -8,6 +8,8 @@ theme = "PaperMod"
     enableRobotsTXT = true
     description = "Links to my socials and more."
     hideFooter = true
+    defaultTheme = "dark"
+    disableThemeToggle = true
     [params.profileMode]
         enabled = true
         #subtitle = "Discord: Josh | Kruitana#8219"
