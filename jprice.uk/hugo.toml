@@ -12,7 +12,7 @@ theme = "PaperMod"
         enabled = true
         #subtitle = "Discord: Josh | CrypticInsanity#8219"
         imageUrl = "/Joshua Price - 2021.webp"
-        imageTitle = "Maki Nishikino"
+        imageTitle = "Joshua Price"
         
     #[[params.socialIcons]]
     #    name = "steam"
