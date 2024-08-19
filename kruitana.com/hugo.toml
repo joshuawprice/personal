@@ -47,4 +47,4 @@ theme = "PaperMod"
 [minify]
   minifyOutput = true
 
-# vim: tabstop=4 shiftwidth=4 expandtab autoindent
+# vim: softtabstop=4 shiftwidth=4 expandtab
