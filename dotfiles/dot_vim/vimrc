@@ -1,0 +1,14 @@
+unlet! skip_defaults_vim
+source $VIMRUNTIME/defaults.vim
+
+
+set number "set relativenumber
+set relativenumber "set relativenumber
+set ignorecase " ignore upper/lower case when searching
+
+" With the default colorscheme this looks much worse.
+" If I do end up using a different colorscheme in future,
+" this may need disabling.
+set notermguicolors
+
+autocmd FileType text setlocal textwidth=78
