@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Quit script on any errors
+set -e
+
+hash tmux 2>/dev/null || { echo "Tmux required, but it's not installed. Aborting."; exit 1; }
+hash ethminer 2>/dev/null || { echo "Ethminer required, but it's not installed. Aborting."; exit 1; }
+
+# Create ethminer cache dir for logs
+if ! [ -d "$XDG_CACHE_HOME"/ethminer ]; then
+  mkdir -p "$XDG_CACHE_HOME"/ethminer
+fi
+
+checkIsRunning() {
+  if tmux has-session -t ethminer 2>/dev/null; then
+    echo "It looks like ethminer is aleady running.
+Please ensure the tmux session \"ethminer\" is closed and try again."
+    sleep 1
+    exit 2
+  fi
+}
+
+# could still remove ansi escape codes from log
+ethminer() {
+  checkIsRunning
+  tmux new-session -ds ethminer '
+    until ethminer --farm-recheck 200 -R --HWMON 1 --stdout \
+    -P stratum1+ssl://0xD94A2525BCc984f659e76bAaBc21F2099e094374.cryptic@eu1.ethermine.org:5555 \
+    -P stratum1+ssl://0xD94A2525BCc984f659e76bAaBc21F2099e094374.cryptic@us1.ethermine.org:5555; do
+      sleep 5
+    done | tee "$XDG_CACHE_HOME"/ethminer/"$(date +%Y-%m-%d-%H%M%S)".log &
+    trap wait EXIT
+    wait'
+}
+
+case "$1" in
+  '')
+    ethminer
+    ;;
+  -f)
+    ethminer
+    # a hack, but works well enough
+    tmux attach-session -t ethminer
+    ;;
+  -a)
+    tmux attach-session -t ethminer
+    ;;
+  *)
+    echo "eth: eth [-f] [-a]
+    Run ethminer with arguments pre-defined
+
+    Lock the terminal and run ethminer in a background tmux session.
+
+    Options:
+      -f	run ethminer in tmux foreground session
+      -a	attach to a currently running ethminer session" ;;
+esac

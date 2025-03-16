@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Backs up hardcoded mc hardcore world to documents folder.
+# Copyright (C) 2021 Joshua Price (joshuapricew@gmail.com)
+# Permission to copy and modify is granted under the MIT license
+# Last revised 2021-08-08
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+
+! rm -r "$HOME/Documents/Hardcore 1_17"
+cp -r "$HOME/.minecraft/saves/Hardcore 1_17" "$HOME/Documents/Hardcore 1_17"

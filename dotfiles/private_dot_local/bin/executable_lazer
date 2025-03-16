@@ -1,0 +1,75 @@
+#!/usr/bin/bash
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+deleteOldAppImages() {
+    # Remove all files except the newest one
+    for file in "${files[@]}"; do
+        if [[ $file != $newest_file ]]; then
+            echo "Removing file: $file"
+            rm "$file"
+        fi
+    done
+}
+
+# Move into folder with appimages.
+cd "$HOME/Downloads/"
+# cd "${0%/*}/"
+
+# Find all osu app images in the specified directory
+files=( osu*.AppImage )
+
+if [[ ${#files[@]} -eq 0 ]]; then
+    echo "There are no osu!lazer app images in this directory."
+    exit 1
+fi
+
+newest_file=
+newest_mtime=0
+
+# Loop through each file and find the newest one
+for file in "${files[@]}"; do
+    mtime=$(stat -c %Y "$file")
+    if [[ $mtime -gt $newest_mtime ]]; then
+        newest_mtime=$mtime
+        newest_file="$file"
+    fi
+done
+
+case "${1:-}" in
+    -d|--delete)
+        deleteOldAppImages
+        exit
+        ;;
+esac
+
+# Looks like we can carry on trying to execute this app image now.
+
+# Set environment variables to make osu run better.
+
+# If running a wayland session start sdl2 with wayland backend.
+if [[ $XDG_SESSION_TYPE = wayland ]]; then
+  export SDL_VIDEODRIVER=wayland
+fi
+
+# Enable D-GPU on Muspelheim
+if [[ "$(hostnamectl hostname)" == "muspelheim" ]]; then
+  :
+  export DRI_PRIME=1
+fi
+
+# Enable screen tearing on kwin wayland 6.0
+#export MESA_VK_WSI_PRESENT_MODE=immediate
+
+# Reduce pipewire latency.
+export PIPEWIRE_LATENCY=64/48000
+export PIPEWIRE_ALSA='{ alsa.buffer-bytes=1024 alsa.period-bytes=64 }'
+
+chmod u+x "$newest_file"
+
+#gamescope -w 2560 -h 1440 ./osu*.AppImage "$@"
+#gamemoderun gamescope -w 2560 -h 1600 -r 165 ./osu*.AppImage "$@"
+gamemoderun ./"$newest_file" "$@"
+
+# vim: softtabstop=4 shiftwidth=4 expandtab

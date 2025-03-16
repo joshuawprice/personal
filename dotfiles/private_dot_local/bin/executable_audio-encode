@@ -1,0 +1,107 @@
+#!/bin/bash
+
+# Convert audio from source to lossy destination.
+# Copyright (C) 2020 Joshua Price (joshuapricew@gmail.com)
+# Permission to copy and modify is granted under the GNU GPLv3 license
+# Last revised 2020-08-04
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+# OLD
+################################
+# ffmpeg -i "$i" -b:a 160k "${i%.*}.opus"
+
+# New?
+# find . -name '*.flac' -type f -print0 | while IFS= read -rd '' i; do opusenc --bitrate 128 "$i" "${i%.*}.opus"; rm "$i"; done
+
+################################
+
+
+print_help() {
+    echo 'Usage: audio-encode [OPTION]... <SOURCE...> <DIRECTORY>
+ Convert audio in SOURCE(s) to lossy formats in DIRECTORY.
+ Where SOURCE(s) is the directory with the original quality files,
+ and DIRECTORY is a directory to store the newly created files.
+ If either arguments are not specified the program will fail.
+ 
+Options:
+ -f, --format=FORMAT		covert to format: mp3,ogg,opus
+     --force			overwrite files if necessary
+ -h, --help			display this help'
+}
+
+mp3_encode() {
+  trap 'wait; rm "${1%.*}.mp3"' TERM EXIT
+  ffmpeg -nostdin -i "$1" -q 0 "${1%.*}.mp3" 2>/dev/null
+  rm "$1"
+}
+
+
+# start parsing of options
+
+# allow a command to fail with !’s side effect on errexit
+# use return value from ${PIPESTATUS[0]}, because ! hosed $?
+# shellcheck disable=SC2251
+! getopt --test > /dev/null 
+if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+  # shellcheck disable=SC2016,SC1112
+  echo 'I’m sorry, `getopt --test` failed in this environment.' >&2
+  exit 1
+fi
+
+OPTIONS=hf:
+LONGOPTS=help,format:,force
+
+# regarding ! and PIPESTATUS see above
+# temporarily store output to be able to check for errors
+# activate quoting/enhanced mode (e.g. by writing out “--options”)
+# pass arguments only via   -- "$@"   to separate them correctly
+# shellcheck disable=SC2251
+! PARSED=$(getopt --options="$OPTIONS" --longoptions="$LONGOPTS" --name "${0##*/}" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  # e.g. return value is 1
+  #  then getopt has complained about wrong arguments to stderr
+  exit 2
+fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+FLAG_format=n FLAG_force=n
+# now enjoy the options in order and nicely split until we see --
+while true; do
+  case "$1" in
+    -h|--help)
+      print_help  
+      exit 0
+      ;;
+    -f|--format)
+      FLAG_format=y
+      FLAG_format_type="${2:-mp3}"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Programming error" >&2
+      exit 3
+      ;;
+  esac
+done
+
+if ! pwd | grep -i music >/dev/null; then 
+  echo "DEBUG: It appears you are not in a music folder" >&2
+  exit 1
+fi
+
+
+while IFS= read -r -d '' i; do
+  mp3_encode "$i" &
+  while (( $(jobs | wc -l) >= 4 )); do
+    sleep 0.1
+    jobs > /dev/null
+  done
+done < <(find ./ -type f -name '*.flac' -print0 | sort -z)
+wait

@@ -1,0 +1,3 @@
+#!/bin/bash
+pactl load-module module-null-sink sink_name="audiocap" sink_properties=device.description="audiocap"
+pactl load-module module-loopback latency_msec=1 sink="audiocap" source="alsa_output.usb-Conexant_Sennheiser_Main_Audio_00000000-00.analog-stereo.monitor"

@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# Upload encrypted movies to Google Drive
+# Copyright (C) 2020 Joshua Price (joshuapricew@gmail.com)
+# Permission to copy and modify is granted under the GNU GPLv3 license
+# Last revised 2020-07-26
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+hash rclone 2>/dev/null || { echo "Rclone required, but it's not installed. Aborting." >&2; exit 1; }
+hash 7z 2>/dev/null || { echo "7zip required, but it's not installed. Aborting." >&2; exit 1; }
+
+print_help() {
+    echo 'Usage: movie-upload [OPTION]... <FILE>
+ Where FILE is the file to be uploaded.
+ If FILE is not specified the program will fail.
+
+movie-upload 7zips a file into ~/ then uploads it to Google Drive, outputting
+the link to the upload to stdout.
+ 
+Options:
+ -p, --password=PASSWORD	where PASSWORD is the encryption password for
+ 				  the archive
+ -h, --help			display this help'
+}
+
+
+# start parsing of options
+
+# allow a command to fail with !’s side effect on errexit
+# use return value from ${PIPESTATUS[0]}, because ! hosed $?
+# shellcheck disable=SC2251
+! getopt --test > /dev/null 
+if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+  # shellcheck disable=SC2016,SC1112
+  echo 'I’m sorry, `getopt --test` failed in this environment.' >&2
+  exit 1
+fi
+
+OPTIONS=hp:
+LONGOPTS=help,password:
+
+# regarding ! and PIPESTATUS see above
+# temporarily store output to be able to check for errors
+# activate quoting/enhanced mode (e.g. by writing out “--options”)
+# pass arguments only via   -- "$@"   to separate them correctly
+# shellcheck disable=SC2251
+! PARSED=$(getopt --options="$OPTIONS" --longoptions="$LONGOPTS" --name "${0##*/}" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  # e.g. return value is 1
+  #  then getopt has complained about wrong arguments to stderr
+  exit 2
+fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+FLAG_password=n
+# now enjoy the options in order and nicely split until we see --
+while true; do
+  case "$1" in
+    -h|--help)
+      print_help  
+      exit 0
+      ;;
+    -p|--password)
+      FLAG_password=y
+      archive_password="$2"
+      echo "The archive password is: $archive_password" >&2
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Programming error" >&2
+      exit 3
+      ;;
+  esac
+done
+
+# handle non-option arguments
+if [[ $# -ne 1 ]]; then
+  echo "${0##*/}: a single input file is required." >&2
+  exit 4
+fi
+
+# check file exists
+if ! [[ -f "$1" ]]; then
+  echo "${0##*/}: file specified does not exist." >&2
+  exit 10
+fi
+
+
+# add the file to 7z archive with optional specified encryption password
+archive_filename="${1%.*}.7z"
+if [[ $FLAG_password == y ]]; then
+  7z -mhe -mx=0 -p"$archive_password" a ~/"$archive_filename" "$1" >/dev/null
+else
+  7z -mx=0 a ~/"$archive_filename" "$1" >/dev/null
+fi
+
+# upload the file to Google Drive
+rclone copy -P ~/"$archive_filename" drive:Share/ >&2
+rclone link drive:Share/"$archive_filename"

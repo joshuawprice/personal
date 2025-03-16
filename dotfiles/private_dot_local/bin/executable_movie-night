@@ -1,0 +1,97 @@
+#!/bin/bash
+
+print_help() {
+    cat << EOF
+Usage: movie-night [OPTION]
+ 
+Options:
+ -c, --close-poll		SSH to asgard to create a timer to send
+				  "10 minutes until form closes" message
+				  to #movie-night
+ -s, --open-suggestions		send "suggestions are now open" message to
+				  #movie-night 
+ 				  name to be displayed by the notification
+ -h, --help			display this help
+EOF
+}
+
+open_suggestions() {
+  curl -F content=\<<(cat << EOF
+@everyone
+Suggestions for the next movie night are now open, as usual, suggestions from
+last week do not carry over. One suggestion per person.
+EOF
+) https://discordapp.com/api/webhooks/736063937325301870/DUbNmFDZ004aBF86uVQDTn4Q05SP1-QMaDwlHosJdcufUphfkfVPM3eTY0MXWlOxMYh6
+}
+
+ssh_close_poll() {
+	# bash seems to require a pts to exit when a job is started using job control
+	ssh asgard -tt <<- EOF
+		{ sleep $(($(date -d "$1 19:50" +%s) - $(date +%s))) && curl -F content=\<<(cat <<- SSH_EOF
+			@everyone
+			10 minutes remain until form closure! Get your vote in now if you haven't already.
+			SSH_EOF
+		) https://discordapp.com/api/webhooks/736063937325301870/DUbNmFDZ004aBF86uVQDTn4Q05SP1-QMaDwlHosJdcufUphfkfVPM3eTY0MXWlOxMYh6; } & disown -h ; exit
+	EOF
+}
+
+# start parsing of options
+
+# allow a command to fail with !’s side effect on errexit
+# use return value from ${PIPESTATUS[0]}, because ! hosed $?
+# shellcheck disable=SC2251
+! getopt --test > /dev/null 
+if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+  # shellcheck disable=SC2016,SC1112
+  echo 'I’m sorry, `getopt --test` failed in this environment.' >&2
+  exit 1
+fi
+
+OPTIONS=hsc:
+LONGOPTS=help,open-suggestions,close-poll:
+
+# regarding ! and PIPESTATUS see above
+# temporarily store output to be able to check for errors
+# activate quoting/enhanced mode (e.g. by writing out “--options”)
+# pass arguments only via   -- "$@"   to separate them correctly
+# shellcheck disable=SC2251
+! PARSED=$(getopt --options="$OPTIONS" --longoptions="$LONGOPTS" --name "${0##*/}" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  # e.g. return value is 1
+  #  then getopt has complained about wrong arguments to stderr
+  exit 2
+fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+# now enjoy the options in order and nicely split until we see --
+while true; do
+  case "$1" in
+    -h|--help)
+      print_help  
+      exit 0
+      ;;
+    -s|--open-suggestions)
+      open_suggestions
+      exit 0
+      ;;
+    -c|--close-poll)
+      ssh_close_poll "$2"
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Programming error" >&2
+      exit 3
+      ;;
+  esac
+done
+
+# handle non-option arguments
+if [[ $# -ne 1 ]]; then
+  echo "${0##*/}: a single input file is required." >&2
+  exit 4
+fi

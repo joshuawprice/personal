@@ -1,0 +1,143 @@
+#!/bin/bash
+
+# Run spectacle and upload file to service or copy to clipboard.
+# Copyright (C) 2020 Joshua Price (joshuapricew@gmail.com)
+# Permission to copy and modify is granted under the GNU GPLv3 license
+# Last revised 2020-06-20
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+hash spectacle 2>/dev/null || { notify-send -a "Scrot" "File upload failed."$'\n'"Spectacle required, but it's not installed. Aborting."; exit 1; }
+hash optipng 2>/dev/null || { notify-send -a "Scrot" "File upload failed."$'\n'"Optipng required, but it's not installed. Aborting."; exit 1; }
+
+mutually_exclusive_args() {
+  echo "Two or more arguments passed are mutually exclusive"
+  exit 7
+}
+
+print_help () {
+  cat << EOF
+Usage: spectacle-upload [OPTION]...
+  TODO: Spectacle will save the file to your directory of choice, or will default to ~/
+
+Options:
+ -s, --service=SERVICE		send to service: asgard,catgirls,0x0,clipboard
+ -h				display this help and exit
+
+     --fullscreen		capture the entire desktop
+     --current			capture the current monitor
+     --activewindow		capture the active window
+     --region			capture a rectangular region of the screen
+ If no capture region is specified, it will default to fullscreen
+
+Exit Status:
+ Returns 0 if task completed successfully; non-zero otherwise."
+EOF
+}
+
+
+# start parsing of options
+
+# allow a command to fail with !’s side effect on errexit
+# use return value from ${PIPESTATUS[0]}, because ! hosed $?
+# shellcheck disable=SC2251
+! getopt --test > /dev/null 
+if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+  # shellcheck disable=SC2016,SC1112
+  echo 'I’m sorry, `getopt --test` failed in this environment.' >&2
+  exit 1
+fi
+
+OPTIONS=hs:
+LONGOPTS=help,service:,fullscreen,current,activewindow,region
+
+# regarding ! and PIPESTATUS see above
+# temporarily store output to be able to check for errors
+# activate quoting/enhanced mode (e.g. by writing out “--options”)
+# pass arguments only via   -- "$@"   to separate them correctly
+# shellcheck disable=SC2251
+! PARSED=$(getopt --options="$OPTIONS" --longoptions="$LONGOPTS" --name "${0##*/}" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  # e.g. return value is 1
+  #  then getopt has complained about wrong arguments to stderr
+  exit 2
+fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+# now enjoy the options in order and nicely split until we see --
+while true; do
+  case "$1" in
+    -h|--help)
+      print_help  
+      exit 0
+      ;;
+    -s|--service)
+      if [[ ! $2 =~ asgard|catgirls|0x0|clipboard ]]; then
+        echo "Invalid service"
+	exit 5
+      fi
+      service="$2"
+      shift 2
+      ;;
+    --fullscreen)
+      [[ -n ${FLAG_capture_method:-} ]] && mutually_exclusive_args || capture_method='--fullscreen'
+      shift
+      ;;
+    --current)
+      [[ -n ${FLAG_capture_method:-} ]] && mutually_exclusive_args || capture_method='--current'
+      shift
+      ;;
+    --activewindow)
+      [[ -n ${FLAG_capture_method:-} ]] && mutually_exclusive_args || capture_method='--activewindow'
+      shift
+      ;;
+    --region)
+      [[ -n ${FLAG_capture_method:-} ]] && mutually_exclusive_args || capture_method='--region'
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Programming error" >&2
+      exit 3
+      ;;
+  esac
+done
+
+# explicitly pick --fullscreen as the default capture method
+FLAG_capture_method="${capture_method:---fullscreen}"
+
+# handle non-option arguments
+if [[ $# -ne 0 ]]; then
+  echo "${0##*/}: this script takes no arguments." >&2
+  exit 4
+fi
+
+
+file=~/"Pictures/Screenshots/Screenshot_$(date +%Y-%m-%d_%H%M%S).png"
+# send file to service specified
+case "${service:-}" in
+  "catgirls")
+    spectacle --background "$FLAG_capture_method" --nonotify --output "${file}" 2>/dev/null
+    sleep 2
+    optipng -- "$file" 2>/dev/null
+    upload --notify=Spectacle --copy-image --catgirls -- "$file"
+    ;; 
+  "0x0")
+    spectacle --background "$FLAG_capture_method" --nonotify --output "$file" 2>/dev/null
+    optipng -- "$file" 2>/dev/null
+    upload --notify=Spectacle --copy-image --x0 -- "$file"
+    ;;
+  "clipboard")
+    spectacle --background --copy-image "$FLAG_capture_method" --output "$file" 2>/dev/null
+    ;;
+  # if the user has not passed -s or --service, exit
+  *)
+    echo 'A service is required.' >&2
+    exit 6
+    ;;
+esac  

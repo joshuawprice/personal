@@ -1,0 +1,3 @@
+#!/usr/bin/sh
+
+openssl rand -hex 8 | sed 's/.\{4\}/&:/g; s/:$//'

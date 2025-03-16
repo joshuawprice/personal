@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# Wrapper for drive-upload script
+# Copyright (C) 2020 Joshua Price (joshuapricew@gmail.com)
+# Permission to copy and modify is granted under the GNU GPLv3 license
+# Last revised 2021-01-07
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+hash drive-upload 2>/dev/null || { echo "File upload failed."$'\n'"drive-upload required, but it's not installed. Aborting." >&2; exit 1; }
+
+print_help() {
+    echo 'Usage: movie-upload [OPTION]... <FILE>
+ Where FILE is the file to be uploaded.
+ If FILE is not specified the program will fail.
+ 
+Options:
+ -h, --help			display this help'
+}
+
+asgard_upload() {
+  while [ 1 ]; do
+    if rsync -Ph --append-verify "$1" asgard:/opt/media >&2; then
+
+      # 2021-06-17 Despite the chmod above, this still seems necessary.
+      # s3 isn't posix, no need for this
+      #ssh asgard "chmod 644 /opt/media/\"$1\""
+      # this seems to hang the mount for a significant period of time, maybe I could make it run in the night?
+      #ssh asgard "touch -d 'Saturday 21:00' /opt/media/\"$1\""
+
+      # 2021-01-15 Change to commented out line if something other than spaces breaks the movie link.
+      #echo "https://asgard.joshwprice.com/""$(python -c 'import urllib.request, sys; print(urllib.request.pathname2url(sys.argv[1]))' "$1")"
+      echo "https://asgard.joshwprice.com/""$(sed 's/ /%20/g' <<< "$1")"
+      break
+    else
+      sleep 3m 
+    fi
+  done
+}
+
+# start parsing of options
+
+# allow a command to fail with !’s side effect on errexit
+# use return value from ${PIPESTATUS[0]}, because ! hosed $?
+# shellcheck disable=SC2251
+! getopt --test > /dev/null 
+if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+  # shellcheck disable=SC2016,SC1112
+  echo 'I’m sorry, `getopt --test` failed in this environment.' >&2
+  exit 1
+fi
+
+OPTIONS=h
+LONGOPTS=help
+
+# regarding ! and PIPESTATUS see above
+# temporarily store output to be able to check for errors
+# activate quoting/enhanced mode (e.g. by writing out “--options”)
+# pass arguments only via   -- "$@"   to separate them correctly
+# shellcheck disable=SC2251
+! PARSED=$(getopt --options="$OPTIONS" --longoptions="$LONGOPTS" --name "${0##*/}" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  # e.g. return value is 1
+  #  then getopt has complained about wrong arguments to stderr
+  exit 2
+fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+# now enjoy the options in order and nicely split until we see --
+while true; do
+  case "$1" in
+    -h|--help)
+      print_help  
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Programming error" >&2
+      exit 3
+      ;;
+  esac
+done
+
+# handle non-option arguments
+if [[ $# -ne 1 ]]; then
+  echo "${0##*/}: a single input file is required." >&2
+  exit 4
+fi
+
+# check file exists
+if ! [[ -f "$1" ]]; then
+  echo "${0##*/}: file specified does not exist." >&2
+  exit 10
+fi
+
+#movie_hash="$(md5sum "$1" | cut -d' ' -f1)"
+#curl_message=$(echo $'@everyone\n'"$(drive-upload -p"$movie_hash" "$1")"$'\n'"Password: $movie_hash"$'\n'"React to this message to indicate that you are watching the movie.")
+asgard_link="$(asgard_upload "$1")"
+curl_message=$(echo $'@everyone\n'"$asgard_link"$'\n'"React to this message to indicate that you are watching the movie.")
+team_tard_message=$(echo "$asgard_link"$'\n'"If you'd like to watch the above movie alone, feel free to just take it, if you'd like to watch with the jp server, feel free to dm.")
+# work around content trying to submit a file due to the "@". Send a text file as the field instead for full, easy formatting.
+discord_upload() {
+  curl -F content=\<<(echo "$curl_message") https://discordapp.com/api/webhooks/736063937325301870/DUbNmFDZ004aBF86uVQDTn4Q05SP1-QMaDwlHosJdcufUphfkfVPM3eTY0MXWlOxMYh6
+  curl -F content=\<<(echo "$team_tard_message") https://discord.com/api/webhooks/867566503637417994/SBx5mQKh2KAHAEw_GVsE1glEm4z0smBR80XkfaHr6iGnoRNOqBD4HiPPh0pDApAP_3Ot
+}
+until discord_upload; do
+  sleep 2m
+done

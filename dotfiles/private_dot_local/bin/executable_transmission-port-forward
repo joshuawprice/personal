@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Saner programming env: these switches turn some bugs into errors.
+set -o errexit -o pipefail -o noclobber -o nounset
+
+port_forward_output="$(natpmpc -a 1 0 udp 60 -g 10.2.0.1 && natpmpc -a 1 0 tcp 60 -g 10.2.0.1)"
+
+open_port=$(grep -m 1 -o 'port [[:digit:]]\+ protocol' <<< $port_forward_output | awk '{print $2}')
+
+systemd-notify --status="Opened TCP & UDP ports $open_port."
+
+sed -i 's/\("peer-port":\) [[:digit:]]\+/\1 '$open_port'/' /home/josh/.config/transmission-daemon/settings.json
+
+# Tell systemd we're ready for transmission to start.
+systemd-notify --ready
+
+# Loop indefinitely to keep our allocated port.
+while true; do
+	natpmpc -a 1 0 udp 60 -g 10.2.0.1 > /dev/null && natpmpc -a 1 0 tcp 60 -g 10.2.0.1 > /dev/null
+
+	if [[ $? -ne 0 ]]; then
+		echo 'Error; bail out.'
+		exit 1
+	fi
+
+	sleep 45
+done
+
+# vim: tabstop=4 shiftwidth=4

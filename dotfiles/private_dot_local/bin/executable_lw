@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Lilypond waiting script
+
+while inotifywait "$@"; do lilypond "$@"; done

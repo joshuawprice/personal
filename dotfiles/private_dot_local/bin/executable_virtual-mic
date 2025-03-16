@@ -1,0 +1,18 @@
+set_up() {
+    echo "Adding sink..."
+	SOURCE_MODULE_PAID=$(pactl load-module module-null-sink sink_name=MumbleLoopback sink_properties=device.description=MumbleLoopback)
+    echo "Adding a virtual microphone..."
+	SINK_MODULE_PAID=$(pactl load-module module-remap-source source_name=VirtualMic master=MumbleLoopback.monitor source_properties=device.description=VirtualMic)
+}
+
+shut_down() {
+	pactl unload-module "$SOURCE_MODULE_PAID"
+	pactl unload-module "$SINK_MODULE_PAID"
+}
+
+set_up
+echo 'Press enter to restore...'
+read -rs
+shut_down
+
+# vim: ts=4 sw=4

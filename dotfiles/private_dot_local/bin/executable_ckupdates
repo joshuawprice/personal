@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+if ! sudo ping -c 1 -W 2 archlinux.org >/dev/null; then
+    echo "Failed to check for updates - internet check failed." >&2
+fi
+
+#if command -v checkupdates >/dev/null; then
+#    echo "\`checkupdates\` is not installed" >&2
+#fi
+
+if [[ "$@" == "-d" ]]; then
+    checkupdates -d 
+    exit 0
+fi
+
+echo "Checking for updates..." >&2
+updates="$(checkupdates && paru -Qua | grep -v '\[ignored\]' || :)"
+
+if [[ -z $updates ]]; then
+    echo "No updates found." >&2
+else
+    echo "$updates"
+fi
+
+# vim: shiftwidth=4 sts=4 expandtab

@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# IN NEED OF MAJOR REWRITE, PROBABLY USE MAINTAINED SCROT ALTERNATIVES.
+
+# After scrot has run upload file to service or copy to clipboard.
+# Copyright (C) 2020 Joshua Price (joshuapricew@gmail.com)
+# Permission to copy and modify is granted under the GNU GPLv3 license
+# Last revised 2020-06-20
+
+# scrot -# -e 'scrot-upload $f' "$HOME"/Pictures/Screenshots/'%Y-%m-%d-%H%M%S_$wx$h_scrot.png'
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+hash xclip 2>/dev/null || { notify-send -a "Scrot" "File upload failed."$'\n'"Xclip required, but it's not installed. Aborting."; exit 1; }
+hash scrot 2>/dev/null || { notify-send -a "Scrot" "File upload failed."$'\n'"Scrot required, but it's not installed. Aborting."; exit 1; }
+hash optipng 2>/dev/null || { notify-send -a "Scrot" "File upload failed."$'\n'"Optipng required, but it's not installed. Aborting."; exit 1; }
+
+copy_to_clipboard () {
+  xclip -selection clipboard -t image/png -i "$1"
+  notify-send -u low -a Scrot -i image "Copied image to clipboard."
+}
+
+print_help () {
+  echo "Usage: scrot-upload [OPTION]... <FILE>
+ Where FILE is the file to be handled, and OPTION is how FILE should be handled
+ If FILE is not specified the program will fail.
+
+Options:
+ -s, --service=SERVICE		send to service: catgirls,0x0,clipboard
+ -h				display this help and exit
+
+Exit Status:
+ Returns 0 if task completed successfully; 1 otherwise."
+}
+
+
+# start parsing of options
+
+# allow a command to fail with !’s side effect on errexit
+# use return value from ${PIPESTATUS[0]}, because ! hosed $?
+# shellcheck disable=SC2251
+! getopt --test > /dev/null 
+if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+  # shellcheck disable=SC2016,SC1112
+  echo 'I’m sorry, `getopt --test` failed in this environment.' >&2
+  exit 1
+fi
+
+OPTIONS=hs:
+LONGOPTS=help,service:
+
+# regarding ! and PIPESTATUS see above
+# temporarily store output to be able to check for errors
+# activate quoting/enhanced mode (e.g. by writing out “--options”)
+# pass arguments only via   -- "$@"   to separate them correctly
+# shellcheck disable=SC2251
+! PARSED=$(getopt --options="$OPTIONS" --longoptions="$LONGOPTS" --name "${0##*/}" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  # e.g. return value is 1
+  #  then getopt has complained about wrong arguments to stderr
+  exit 2
+fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+# now enjoy the options in order and nicely split until we see --
+while true; do
+  case "$1" in
+    -h|--help)
+      print_help  
+      exit 0
+      ;;
+    -s|--service)
+      if [[ ! $2 =~ catgirls|0x0|clipboard ]]; then
+        echo "Invalid service" >&2
+	exit 5
+      fi
+      service="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Programming error" >&2
+      exit 3
+      ;;
+  esac
+done
+
+# handle non-option arguments
+if [[ $# -ne 1 ]]; then
+  echo "${0##*/}: a single input file is required." >&2
+  exit 4
+fi
+
+
+# send file to service specified
+case "${service:-}" in
+  "catgirls")
+    optipng -- "$1" 2>/dev/null
+    catgirls-upload --notify=Scrot --copy-to-clipboard -- "$1"
+    ;; 
+  "0x0")
+    optipng -- "$1" 2>/dev/null
+    0x0-upload --notify=Scrot --copy-to-clipboard -- "$1"
+    ;;
+  "clipboard")
+    optipng -o2 -- "$1"
+    copy_to_clipboard "$1"
+    ;;
+  *)
+    echo 'A service is required.' >&2
+    exit 6
+    ;;
+esac

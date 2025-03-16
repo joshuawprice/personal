@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+
+if [[ -z $1 ]]; then
+	echo "Please specify a file to watch."
+	exit 1
+fi
+
+while true; do
+	# When watching a file that is being written to in vim, inotifywait
+	# finds these three events:
+	# - move_self
+	# - attrib
+	# - delete_self
+	#
+	# When delete_self runs, inotifywait always exits, therefore we shall
+	# pick that event of the three to listen to.
+	inotifywait --event delete_self "$1" >/dev/null 2>&1 && {
+		number_of_running_jobs=$(jobs -r | wc -l)
+		if [[ $number_of_running_jobs -gt 0 ]]; then
+			kill %1
+		fi
+
+		pandoc -s "$1" -o "${1%.*}.pdf" &
+	}
+done

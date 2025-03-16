@@ -1,0 +1,47 @@
+#!/bin/bash
+
+set -x
+
+export WINE=/opt/wine-osu/bin/wine
+export WINEPREFIX=~/Games/osu
+
+# Start discord ipc converter
+"$WINE" "$WINEPREFIX/winediscordipcbridge.exe" &
+
+if [[ $(hostnamectl hostname 2>/dev/null) = muspelheim ]]; then
+    export DRI_PRIME=1
+fi
+
+#mangohud --dlsym "$WINE" 'C:\\osu\\osu!.exe'
+
+# Disable vsync.
+export vblank_mode=0
+
+"$WINE" 'C:\\osu\\osu!.exe'
+
+kill %1
+
+exit
+
+
+
+
+###############################################
+# I BELIEVE TO BE OLD AND UNNECESSARY
+
+
+#STAGING_AUDIO_DURATION=26666 vblank_mode=0 WINEPREFIX=/home/josh/Games/osu/ gamemoderun /opt/wine-osu/bin/wine /home/josh/Games/osu/drive_c/osu/osu\!.exe
+#WINEPREFIX=/home/josh/Games/osu /opt/wine-osu/bin/wine /home/josh/Games/osu/drive_c/Program\ Files/winediscordipcbridge.exe &
+#STAGING_AUDIO_PERIOD=1 PULSE_LATENCY_MSEC= WINEPREFIX=/home/josh/Games/osu /opt/wine-osu/bin/wine /home/josh/Games/osu/drive_c/osu/osu\!.exe
+#STAGING_AUDIO_DURATION=10000 
+#STAGING_AUDIO_PERIOD=20000 PULSE_LATENCY_MSEC= WINEPREFIX=/home/josh/Games/'osu (wine 5)' /opt/wine-osu/bin/wine /home/josh/Games/'osu (wine 5)'/drive_c/osu/osu\!.exe
+
+#STAGING_AUDIO_DURATION=12000 PULSE_LATENCY_MSEC= WINEPREFIX=/home/josh/Games/osu /opt/wine-osu/bin/wine /home/josh/Games/osu/drive_c/osu/osu\!.exe
+
+#kill %1
+
+WINEPREFIX=~/Games/osu vblank_mode=0 /opt/wine-osu/bin/wine ~/Games/osu/drive_c/osu/osu\!.exe
+# gamemoderun ?
+#MANGOHUD_CONFIG="position=bottom-right,offset_y=-21,toggle_logging=Shift_L+F4,cpu_stats=0,gpu_stats=0,frame_timing=0" mangohud --dlsym
+
+# vim: softtabstop=4 shiftwidth=4
