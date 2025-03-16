@@ -1,0 +1,116 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+#
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+x () {
+  #if systemctl -q is-active graphical.target && [[ -z $DISPLAY ]] && tty; then
+  if [[ -z $DISPLAY ]] && tty; then
+    #startx "$XDG_CONFIG_HOME/X11/xinitrc" --
+    startx --
+    clear
+    ckupdates
+  else
+    echo "Error - You are not using a local terminal."
+  fi
+}
+
+eth () {
+  if command eth "$@"; then
+    if [[ -z $@ ]]; then 
+      exit
+    fi
+  fi
+}
+
+# bash parameter completion for the dotnet CLI
+
+_dotnet_bash_complete() {
+  local word=${COMP_WORDS[COMP_CWORD]}
+
+  local completions
+  completions="$(dotnet complete --position "${COMP_POINT}" "${COMP_LINE}")"
+
+  COMPREPLY=( $(compgen -W "$completions" -- "$word") )
+}
+complete -f -F _dotnet_bash_complete dotnet
+
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=5000
+HISTFILESIZE=10000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+  # We have color support; assume it's compliant with Ecma-48
+  # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+  # a case would tend to support setf rather than setaf.)
+  color_prompt=yes
+else
+  color_prompt=
+fi
+
+if [ "$color_prompt" = yes ]; then
+  PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w \$\[\033[00m\] '
+else
+  PS1='\u@\h:\w\$ '
+fi
+unset color_prompt
+
+#if hash pyenv 2>/dev/null; then
+#	export PYENV_ROOT="$HOME/.pyenv"
+#	[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+#	eval "$(pyenv init -)"
+#fi
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
+
+# Fixes `ls` not showing color on Asgard
+if [[ $TERM = foot ]]; then
+	export COLORTERM=truecolor
+fi
+
+# enable color support of ls and also add handy aliases
+alias ls='ls --color=auto'
+
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# colored GCC warnings and errors
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+# some more ls aliases
+alias ll='ls -lhF'
+alias la='ls -A'
+alias l='ls -CF'
+
+if command -v fish >/dev/null && [[ $(ps --no-header --pid=$PPID --format=comm) != "fish" && -z ${BASH_EXECUTION_STRING} && ${SHLVL} == 1 ]]
+then
+	shopt -q login_shell && LOGIN_OPTION='--login' || LOGIN_OPTION=''
+	exec fish $LOGIN_OPTION
+fi
+
+# vim: ts=4 sw=4

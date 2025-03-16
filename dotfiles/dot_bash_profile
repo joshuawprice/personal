@@ -1,0 +1,85 @@
+#
+# ~/.bash_profile
+#
+
+# Default Applications
+export VISUAL=vim
+export EDITOR="$VISUAL"
+export SSH_ASKPASS="/bin/ksshaskpass"
+export SSH_ASKPASS_REQUIRE=prefer
+
+
+# Add cargo to path
+export PATH="~/.cargo/bin/:$PATH"
+
+# Add ~/.local/bin to path
+export PATH=/home/josh/.local/bin:"$PATH"
+# Add ~/.local/user-scripts to path
+export PATH=/home/josh/.local/user-scripts:"$PATH"
+
+# Use wayland on firefox if available
+export MOZ_ENABLE_WAYLAND=1
+
+# Define XDG environment variables
+export XDG_CONFIG_HOME="$HOME"/.config
+export XDG_CACHE_HOME="$HOME"/.cache
+export XDG_DATA_HOME="$HOME"/.local/share
+
+# Clean-up home directory
+export CUDA_CACHE_PATH="$XDG_CACHE_HOME"/nv
+export GEM_SPEC_CACHE="$XDG_CACHE_HOME"/gem
+export ICEauthority="$XDG_CACHE_HOME"/ICEauthority
+export LESSHISTFILE="$XDG_CACHE_HOME"/less/history
+
+export WINEDEBUG=-all
+
+# Is this even necessary with my term extension? 2024-01-23
+export GUAKE_ENABLE_WAYLAND=1
+
+if [[ $(hostnamectl hostname) = muspelheim ]]; then
+    if [[ $DESKTOP_SESSION = plasma ]]; then
+        # Steam opens at 1x UI scale, until cycling big picture mode.
+		# Makes steam open at the right scale on first launch.
+		# (2023-07-30)
+		# Breaks with gnome scaling (lol) (2023-12-21)
+		export STEAM_FORCE_DESKTOPUI_SCALING=1.5
+	fi
+fi
+
+if hash pyenv 2>/dev/null; then
+	export PYENV_ROOT="$HOME/.pyenv"
+	[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+	eval "$(pyenv init -)"
+fi
+
+# Low latency audio!
+# Tried 1, too many underruns
+#export PULSE_LATENCY_MSEC=2
+
+# Don't run if not installed for now.
+hash gnome-keyrind-daemon 2>/dev/null && {
+	gnome-keyring-daemon --start >/dev/null
+}
+
+hash keychain 2>/dev/null && {
+	eval $(keychain --eval --quiet --noask)
+}
+
+# Created by `pipx` on 2024-05-16 21:58:57
+if hash pipx 2>/dev/null; then
+	export PATH="$PATH:/home/admin/.local/bin"
+fi
+
+if [[ $(hostnamectl hostname) = muspelheim ]]; then
+	if uwsm check may-start >/dev/null; then
+		exec uwsm start sway.desktop
+	fi
+	#if [[ -z $WAYLAND_DISPLAY && $XDG_VTNR -eq 1 ]]; then
+		#exec dbus-run-session sway
+	#fi
+fi
+
+[[ -f ~/.bashrc ]] && . ~/.bashrc
+
+# Use tabs for heredoc indent removal feature
+# vim: tabstop=4 shiftwidth=4
