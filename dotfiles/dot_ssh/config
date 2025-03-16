@@ -1,0 +1,39 @@
+#VerifyHostKeyDNS yes
+AddKeysToAgent yes
+
+# Stop SSH connections from hanging.
+ServerAliveInterval 15
+
+Host asgard*
+    User admin
+
+Host asgard
+    SendEnv TERM xterm-256color
+    Hostname asgard.jprice.uk
+
+Host yggdrasil
+# Assume that the bifrost is available.
+#    ProxyJump asgard
+    Hostname yggdrasil.bifrost
+
+Host muspelheim
+#    ProxyJump asgard
+    Hostname muspelheim.bifrost
+
+Host nidavellir
+    Hostname nidavellir.jprice.uk
+    Port 122
+
+Host sheila
+    User sheila
+    Hostname sheila.bifrost
+
+
+# SSH config uses the first value it finds for a setting, so keep this wildcard at the bottom.
+Host *
+    User josh
+    #CanonicalDomains local
+    #CanonicalizeHostname yes
+    #IdentitiesOnly yes
+
+# vim: softtabstop=4 shiftwidth=4 expandtab

@@ -1,0 +1,9 @@
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC86+buJ2IUR5kA2itxF6cxNhAlXpFDvkMSyy98cyV63 josh@yggdrasil (localhost)
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDUoalvIv0DgrRNC+Qi+JIPix4rWQLHCeQ82JDdQxzdV josh@asgard
+#ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJDnCVx7RUlrP7Qa35qChuvDTSLXSQG6C/m9o//Xi63P Vanaheim # Use the ecdsa key instead? 2024-01-24
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDxwpe+zdeTEZlfaUlOOoEk5Rqn7USOhXZA3X4YRozm1 josh@muspelheim
+ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBLilSDgiwdX8KNsD7g/NO1ZVcF2kHnm/xaCEnGznzTZJiTxsnDN5F0GaD+l9/ARy7IhgYHUghfu0IQRKNjaHIlI= vanaheim (ecdsa, required for samsung my files 2024-01-24)
+#ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHaHl6485JZ+paqHNMXtT5ADzcamC5gyi/J7mDItxxQm josh@jotunheim
+#ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII5rTA329MYO+G+DJ4vmcXdVK1FKtWfsOIlJO6hObccy Dundee Uni Comuters
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEiZfpbceGHFyM6nShseVt4jkhLNsYBJJcrq1Bx3AUJv admin@ip-172-31-34-193
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFcjHeYDPz1LlCLg0oLdyPcvmGX/vGbkNuDx8ZSsMBmU sheila-laptop.broadband
