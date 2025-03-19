@@ -59,7 +59,7 @@ def format_object(s3_object) -> str:
     short_name: str = object_key.rpartition("/")[2]
 
     return '<a href="{href}">{filename}</a>{whitespace} {datetime}{filesize:>8}'.format(
-        href=f"/{quote_plus(object_key.lstrip(".misc/"), safe="/")}",
+        href=f"/{quote_plus(object_key.removeprefix("misc/"), safe="/")}",
         filename=(
             f"{short_name[:50]}" if len(short_name) <= 50 else f"{short_name[:47]}..>"
         ),
