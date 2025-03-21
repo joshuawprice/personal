@@ -14,7 +14,7 @@ deleteOldAppImages() {
 }
 
 # Move into folder with appimages.
-cd "$HOME/Downloads/"
+cd "$HOME/.local/bin/"
 # cd "${0%/*}/"
 
 # Find all osu app images in the specified directory
