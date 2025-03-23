@@ -41,7 +41,7 @@ def format_directory(directory: str) -> str:
     short_name: str = directory.strip("/").rpartition("/")[2] + "/"
 
     return '<a href="{href}">{filename}</a>{whitespace} {datetime:>17}{filesize:>8}'.format(
-        href=f"/{quote_plus(directory, safe="/")}",
+        href=f"/{quote_plus(directory, safe='/')}",
         filename=(
             f"{short_name[:50]}" if len(short_name) <= 50 else f"{short_name[:47]}..>"
         ),
@@ -59,7 +59,7 @@ def format_object(s3_object) -> str:
     short_name: str = object_key.rpartition("/")[2]
 
     return '<a href="{href}">{filename}</a>{whitespace} {datetime}{filesize:>8}'.format(
-        href=f"/{quote_plus(object_key.removeprefix("misc/"), safe="/")}",
+        href=f"/{quote_plus(object_key.removeprefix('misc/'), safe='/')}",
         filename=(
             f"{short_name[:50]}" if len(short_name) <= 50 else f"{short_name[:47]}..>"
         ),
@@ -142,7 +142,7 @@ def lambda_handler(event, context):
 
     # It looks like the user requested a valid directory, but forgot to append a /.
     if not s3.is_directory(path) and (s3.is_directory(path + "/")):
-        return redirect(f"/{quote_plus(path, safe="/")}/")
+        return redirect(f"/{quote_plus(path, safe='/')}/")
 
     if s3.is_directory(path):
         return display_directory(path)
