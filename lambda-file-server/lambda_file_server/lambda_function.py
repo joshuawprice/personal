@@ -132,13 +132,23 @@ def lambda_handler(event, context):
     path = path.lstrip("/")
 
     # If the path is a file, then just redirect to the cdn.
-    # The posix emulation filesystem mount creates files of zero size with the same key as the directory.
-    # Checking for the size of the file guards against that attempting to redirect as a file.
-    if any(path == d.get("Key") and d.get("Size") != 0 for d in s3.get_contents(path)):
-        return redirect(f"{CDN_URL}/{quote(path)}")
+    # We also want files in hidden/ and misc/ to be accessible on the root.
+    for prefix in ["", "hidden/", "misc/"]:
+        # The posix emulation filesystem mount creates files of zero size
+        # with the same key as the directory.
+        # Checking for the size of the file guards against that attempting
+        # to redirect as a file.
+        if any(
+            prefix + path == obj.get("Key") and obj.get("Size") != 0
+            for obj in s3.get_contents(prefix + path)
+        ):
+            return redirect(f"{CDN_URL}/{prefix}{quote(path)}")
 
-    if any(path + ".html" == d.get("Key") for d in s3.get_contents(path)):
-        return redirect(f"{CDN_URL}/{quote(path)}.html")
+        if any(
+            prefix + path + ".html" == obj.get("Key")
+            for obj in s3.get_contents(prefix + path)
+        ):
+            return redirect(f"{CDN_URL}/{prefix}{quote(path)}.html")
 
     # It looks like the user requested a valid directory, but forgot to append a /.
     if not s3.is_directory(path) and (s3.is_directory(path + "/")):
@@ -146,15 +156,6 @@ def lambda_handler(event, context):
 
     if s3.is_directory(path):
         return display_directory(path)
-
-    for prefix in ["hidden/", "misc/"]:
-        if any(prefix + path == obj["Key"] for obj in s3.get_contents(prefix + path)):
-            return redirect(f"{CDN_URL}/{prefix}{quote(path)}")
-
-        if any(
-            prefix + path + ".html" == obj["Key"] for obj in s3.get_contents(prefix + path)
-        ):
-            return redirect(f"{CDN_URL}/{prefix}{quote(path)}.html")
 
     # If the user had requested a valid file, they would have been redirected by now.
     if not s3.is_directory(path):
