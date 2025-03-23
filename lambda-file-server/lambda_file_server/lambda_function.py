@@ -132,8 +132,8 @@ def lambda_handler(event, context):
     path = path.lstrip("/")
 
     # If the path is a file, then just redirect to the cdn.
-    # We also want files in hidden/ and misc/ to be accessible on the root.
-    for prefix in ["", "hidden/", "misc/"]:
+    # We also want files in misc/ and hidden/ to be accessible on the root.
+    for prefix in ["", "misc/", "hidden/"]:
         # The posix emulation filesystem mount creates files of zero size
         # with the same key as the directory.
         # Checking for the size of the file guards against that attempting
