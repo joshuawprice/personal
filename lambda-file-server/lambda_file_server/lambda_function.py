@@ -148,11 +148,11 @@ def lambda_handler(event, context):
         return display_directory(path)
 
     for prefix in ["hidden/", "misc/"]:
-        if any(prefix + path == obj["Key"] for obj in s3.get_contents(prefix)):
+        if any(prefix + path == obj["Key"] for obj in s3.get_contents(prefix + path)):
             return redirect(f"{CDN_URL}/{prefix}{quote(path)}")
 
         if any(
-            prefix + path + ".html" == obj["Key"] for obj in s3.get_contents(prefix)
+            prefix + path + ".html" == obj["Key"] for obj in s3.get_contents(prefix + path)
         ):
             return redirect(f"{CDN_URL}/{prefix}{quote(path)}.html")
 
