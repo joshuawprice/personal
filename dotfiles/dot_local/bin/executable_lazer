@@ -59,12 +59,11 @@ if [[ "$(hostnamectl hostname)" == "muspelheim" ]]; then
   export DRI_PRIME=1
 fi
 
-# Enable screen tearing on kwin wayland 6.0
-#export MESA_VK_WSI_PRESENT_MODE=immediate
-
 # Reduce pipewire latency.
-export PIPEWIRE_LATENCY=64/48000
-export PIPEWIRE_ALSA='{ alsa.buffer-bytes=1024 alsa.period-bytes=64 }'
+export PIPEWIRE_ALSA='{ node.force-quantum=64 alsa.buffer-bytes=1024 alsa.period-bytes=64 }'
+# Maybe setting both is nonsensical..?
+#export PIPEWIRE_LATENCY=64/48000
+#export PIPEWIRE_ALSA='{ alsa.buffer-bytes=1024 alsa.period-bytes=64 }'
 
 chmod u+x "$newest_file"
 
