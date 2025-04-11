@@ -10,7 +10,7 @@ if status is-interactive
 
     # --fullscreen to remove black bar at bottom of screen
     # font size 14 to more closely match the default vte
-    exec cage -s -- foot --fullscreen --font=monospace:size=$font_size 2>/dev/null
+    exec cage -s -- foot --fullscreen --override=mouse.hide-when-typing=yes --font=monospace:size=$font_size 2>/dev/null
 end
 
     
