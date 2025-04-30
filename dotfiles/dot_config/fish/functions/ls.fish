@@ -4,7 +4,7 @@ if command -v eza >/dev/null
     end
 else
     function ls --wraps ls
-        command ls --color=auto
+        command ls --color=auto $argv
     end
 end
 
