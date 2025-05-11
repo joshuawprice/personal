@@ -1,6 +1,6 @@
 if status is-interactive
     and [ -z $WAYLAND_DISPLAY ]
-    set -q XDG_VTNR
+    and set -q XDG_VTNR
     and [ $XDG_VTNR -ge 3 ]
 
     if [ $(hostnamectl hostname) = "yggdrasil" ]
