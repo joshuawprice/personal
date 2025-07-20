@@ -1,0 +1,12 @@
+Bot announcements to servers
+Audio playback
+Cleanup messages (above, below, between, etc)
+Command permissions
+Info about bot
+Contact owner
+Dm to user through bot
+Bot status ("Playing !help | 144 users | 11 servers)
+Restart bot
+Uptime
+Moderation tools like kick, ban
+Mumble status!
