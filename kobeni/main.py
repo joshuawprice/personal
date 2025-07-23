@@ -13,6 +13,8 @@ from discord.ext import tasks
 import mumble
 
 
+GENERAL_VOICE_CHANNEL_ID = 532274742141517828
+
 last_user_count = None
 
 
@@ -39,7 +41,10 @@ class MyClient(discord.Client):
             return
 
         # When last user leaves the voice channel, the status disappears.
-        if before.channel.id == 532274742141517828 and len(before.channel.members) == 0:
+        if (
+            before.channel.id == GENERAL_VOICE_CHANNEL_ID
+            and len(before.channel.members) == 0
+        ):
             # Required to force the channel status to update
             global last_user_count
             last_user_count = None
@@ -77,7 +82,7 @@ async def update_mumble_user_count():
 
     last_user_count = current_user_count
 
-    general_voice_channel = client.get_channel(532274742141517828)
+    general_voice_channel = client.get_channel(GENERAL_VOICE_CHANNEL_ID)
     pluralised_user_string = "users" if current_user_count != 1 else "user"
     await general_voice_channel.edit(
         status=f"{current_user_count} {pluralised_user_string} on Mumble"
@@ -90,7 +95,7 @@ async def wait_until_ready():
 
 
 async def remove_mumble_channel_count_status():
-    general_voice_channel = client.get_channel(532274742141517828)
+    general_voice_channel = client.get_channel(GENERAL_VOICE_CHANNEL_ID)
     await general_voice_channel.edit(status=None)
 
 
