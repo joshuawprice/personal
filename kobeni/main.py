@@ -24,6 +24,7 @@ class MyClient(discord.Client):
 
     async def close(self):
         logger.info("Shutting down bot...")
+        update_mumble_user_count.cancel()
         await remove_mumble_channel_count_status()
         await super().close()
 
