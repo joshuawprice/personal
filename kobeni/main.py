@@ -23,6 +23,7 @@ class MyClient(discord.Client):
         update_mumble_user_count.start()
 
     async def close(self):
+        logger.info("Shutting down bot...")
         await remove_mumble_channel_count_status()
         await super().close()
 
