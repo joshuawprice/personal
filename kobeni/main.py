@@ -90,6 +90,12 @@ async def update_mumble_user_count():
         status=f"{current_user_count} {pluralised_user_string} on Mumble"
     )
 
+    guild = client.get_guild(532274742141517824)
+    if current_user_count > 0:
+        await general_voice_channel.connect()
+    elif guild.voice_client is not None:
+        await guild.voice_client.disconnect()
+
 
 @update_mumble_user_count.before_loop
 async def wait_until_ready():
