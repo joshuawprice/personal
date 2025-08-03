@@ -86,15 +86,18 @@ async def update_mumble_user_count():
 
     general_voice_channel = client.get_channel(GENERAL_VOICE_CHANNEL_ID)
     pluralised_user_string = "users" if current_user_count != 1 else "user"
+    logger.debug("Updating status of general voice channel in jp")
     await general_voice_channel.edit(
         status=f"{current_user_count} {pluralised_user_string} on Mumble"
     )
 
-    guild = client.get_guild(532274742141517824)
-    if current_user_count > 0:
+    voice_client = client.get_guild(532274742141517824).voice_client
+    if current_user_count > 0 and voice_client is None:
+        logger.debug("Connecting to general voice channel in jp")
         await general_voice_channel.connect()
-    elif guild.voice_client is not None:
-        await guild.voice_client.disconnect()
+    elif current_user_count == 0 and voice_client is not None:
+        logger.debug("Disconnecting from general voice channel in jp")
+        await voice_client.disconnect()
 
 
 @update_mumble_user_count.before_loop
