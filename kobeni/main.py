@@ -2,6 +2,8 @@
 # - Handle the exceptions listed here: https://discordpy.readthedocs.io/en/stable/api.html#discord.Client.connect
 # - Don't expose the token!!
 # - Switch to using discord.ext cogs and whatnot
+# - Move to using cogs
+# - Can I have remove_mumble_channel_count_status() as an after loop using an if_cancelled?
 
 import asyncio
 from datetime import datetime, timezone
