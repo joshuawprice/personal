@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     client.run(
         "",
-        log_level=logging.DEBUG,
+        # log_level=logging.DEBUG,
         root_logger=True,
     )
 
