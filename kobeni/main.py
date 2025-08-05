@@ -1,9 +1,7 @@
 # TODO:
 # - Handle the exceptions listed here: https://discordpy.readthedocs.io/en/stable/api.html#discord.Client.connect
 # - Don't expose the token!!
-# - Switch to using discord.ext cogs and whatnot
 # - Move to using cogs
-# - Can I have remove_mumble_channel_count_status() as an after loop using an if_cancelled?
 
 import asyncio
 from datetime import datetime, timezone
@@ -26,8 +24,11 @@ class MyClient(discord.Client):
 
     async def close(self):
         logger.info("Shutting down bot...")
+
         update_mumble_user_count.cancel()
-        await remove_mumble_channel_count_status()
+        general_voice_channel = client.get_channel(GENERAL_VOICE_CHANNEL_ID)
+        await general_voice_channel.edit(status=None)
+
         await super().close()
 
     async def on_ready(self):
@@ -106,11 +107,6 @@ async def update_mumble_user_count():
 @update_mumble_user_count.before_loop
 async def wait_until_ready():
     await client.wait_until_ready()
-
-
-async def remove_mumble_channel_count_status():
-    general_voice_channel = client.get_channel(GENERAL_VOICE_CHANNEL_ID)
-    await general_voice_channel.edit(status=None)
 
 
 def main(): ...
