@@ -65,9 +65,10 @@ async def update_mumble_user_count():
     # This just prevents it doing that and spamming the server.
     current_time = datetime.now(timezone.utc)
     next_iteration_time = update_mumble_user_count.next_iteration
-    if current_time >= next_iteration_time:
+    if next_iteration_time is not None and current_time >= next_iteration_time:
         logger.debug("Restarting update_mumble_user_count() task")
         update_mumble_user_count.restart()
+        return
 
     try:
         async with asyncio.timeout(1):
