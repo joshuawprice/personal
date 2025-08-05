@@ -2,6 +2,7 @@
 # - Handle the exceptions listed here: https://discordpy.readthedocs.io/en/stable/api.html#discord.Client.connect
 # - Don't expose the token!!
 # - Move to using cogs
+# - Pick a better way of getting the address to ping (eg asgard.bifrost/jprice.uk)
 
 import asyncio
 from datetime import datetime, timezone
