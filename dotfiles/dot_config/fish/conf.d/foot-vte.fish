@@ -3,6 +3,16 @@ if status is-interactive
     and set -q XDG_VTNR
     and [ $XDG_VTNR -ge 3 ]
 
+    if ! command -v cage >/dev/null
+        echo "`cage' not installed, falling back to tty." >&2
+        return
+    end
+
+    if ! command -v foot >/dev/null
+        echo "`foot' not installed, falling back to tty." >&2
+        return
+    end
+
     if [ $(hostnamectl hostname) = "yggdrasil" ]
         set font_size 14
     else if [ $(hostnamectl hostname) = "muspelheim" ]
