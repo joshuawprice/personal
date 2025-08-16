@@ -5,6 +5,7 @@ set -o errexit -o pipefail -o noclobber -o nounset
 
 if ! sudo ping -c 1 -W 2 archlinux.org >/dev/null; then
     echo "Failed to check for updates - internet check failed." >&2
+    exit 1
 fi
 
 #if command -v checkupdates >/dev/null; then
