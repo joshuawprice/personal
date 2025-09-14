@@ -1,7 +1,17 @@
 import asyncio
 import struct
 import time
-import MumbleUDP_pb2
+
+from google.protobuf.runtime_version import VersionError
+
+try:
+    from . import MumbleUDP_pb2
+except VersionError as e:
+    print(
+        "Version error on trying to import mumble protobuf python module. "
+        "Did you generate it with a newer version than the runtime version?"
+    )
+    raise e
 
 # TODO:
 # - Some form of protobuf compilation by itself?
