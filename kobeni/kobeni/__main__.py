@@ -11,7 +11,7 @@ import logging
 import discord
 from discord.ext import tasks
 
-import mumble
+from . import mumble
 
 
 GENERAL_VOICE_CHANNEL_ID = 532274742141517828
