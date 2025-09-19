@@ -1,0 +1,8 @@
+#!/bin/sh
+
+while true; do
+	if ping -c1 "$1" >/dev/null; then
+		date
+	fi
+	sleep 60
+done
