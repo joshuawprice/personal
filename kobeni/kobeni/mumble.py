@@ -14,9 +14,10 @@ except VersionError as e:
     raise e
 
 # TODO:
-# - Some form of protobuf compilation by itself?
 # - Mumble SRV record lookup
 # - Check return address matches sending address?
+# - General tidy:
+#   - https://docs.python.org/3/library/asyncio-protocol.html#transports-hierarchy
 
 
 def encode_ping() -> MumbleUDP_pb2.Ping:
