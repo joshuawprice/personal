@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Ignore built protobuf files in development
+MumbleUDP_pb2.py
