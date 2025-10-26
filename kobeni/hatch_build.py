@@ -56,6 +56,12 @@ class ProtocBuildHook(BuildHookInterface):
             try:
                 subprocess.run(cmd, check=True, capture_output=True, text=True)
                 print(f"Successfully compiled {proto_file.name}")
+
+                # Hatch ignores files listed in .gitignore, so we need to tell it
+                # about our build artifacts explicitly.
+                build_data["artifacts"].append(
+                    proto_file.name.removesuffix(".proto") + "_pb2.py"
+                )
             except subprocess.CalledProcessError as e:
                 print(f"Error compiling {proto_file.name}: {e}")
                 print(f"stdout: {e.stdout}")
