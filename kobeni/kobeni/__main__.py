@@ -1,15 +1,16 @@
 # TODO:
 # - Handle the exceptions listed here: https://discordpy.readthedocs.io/en/stable/api.html#discord.Client.connect
-# - Don't expose the token!!
 # - Move to using cogs
 # - Pick a better way of getting the address to ping (eg asgard.bifrost/jprice.uk)
 
 import asyncio
 from datetime import datetime, timezone
 import logging
+import os
 
 import discord
 from discord.ext import tasks
+from dotenv import load_dotenv
 
 from . import mumble
 
@@ -116,12 +117,14 @@ def main(): ...
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
 
+    load_dotenv()
+
     intents = discord.Intents.default()
     intents.message_content = True
     client = MyClient(intents=intents)
 
     client.run(
-        "",
+        os.getenv("TOKEN"),
         # log_level=logging.DEBUG,
         root_logger=True,
     )

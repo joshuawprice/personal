@@ -8,6 +8,7 @@ dependencies = [
     "discord-py~=2.6",
     "protobuf~=6.33",
     "pynacl~=1.6",
+    "python-dotenv~=1.2",
 ]
 
 [build-system]

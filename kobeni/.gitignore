@@ -11,3 +11,6 @@ wheels/
 
 # Ignore built protobuf files in development
 MumbleUDP_pb2.py
+
+# Secrets
+.env
