@@ -9,6 +9,7 @@ import logging
 import os
 
 import discord
+from discord.ext import commands
 from discord.ext import tasks
 from dotenv import load_dotenv
 
@@ -20,7 +21,7 @@ GENERAL_VOICE_CHANNEL_ID = 532274742141517828
 last_user_count = None
 
 
-class MyClient(discord.Client):
+class Bot(commands.Bot):
     async def setup_hook(self):
         update_mumble_user_count.start()
 
@@ -28,7 +29,7 @@ class MyClient(discord.Client):
         logger.info("Shutting down bot...")
 
         update_mumble_user_count.cancel()
-        general_voice_channel = client.get_channel(GENERAL_VOICE_CHANNEL_ID)
+        general_voice_channel = bot.get_channel(GENERAL_VOICE_CHANNEL_ID)
         await general_voice_channel.edit(status=None)
 
         await super().close()
@@ -37,7 +38,7 @@ class MyClient(discord.Client):
         logger.info(f"We have logged in as {self.user}")
 
     async def on_message(self, message):
-        if message.author == client.user:
+        if message.author == bot.user:
             return
 
         if message.content.startswith("$hello"):
@@ -90,14 +91,14 @@ async def update_mumble_user_count():
 
     last_user_count = current_user_count
 
-    general_voice_channel = client.get_channel(GENERAL_VOICE_CHANNEL_ID)
+    general_voice_channel = bot.get_channel(GENERAL_VOICE_CHANNEL_ID)
     pluralised_user_string = "users" if current_user_count != 1 else "user"
     logger.info("Updating status of general voice channel in jp")
     await general_voice_channel.edit(
         status=f"{current_user_count} {pluralised_user_string} on Mumble"
     )
 
-    voice_client = client.get_guild(532274742141517824).voice_client
+    voice_client = bot.get_guild(532274742141517824).voice_client
     if current_user_count > 0 and voice_client is None:
         logger.info("Connecting to general voice channel in jp")
         await general_voice_channel.connect()
@@ -108,7 +109,7 @@ async def update_mumble_user_count():
 
 @update_mumble_user_count.before_loop
 async def wait_until_ready():
-    await client.wait_until_ready()
+    await bot.wait_until_ready()
 
 
 def main(): ...
@@ -121,9 +122,9 @@ if __name__ == "__main__":
 
     intents = discord.Intents.default()
     intents.message_content = True
-    client = MyClient(intents=intents)
+    bot = Bot(command_prefix="$", intents=intents)
 
-    client.run(
+    bot.run(
         os.getenv("TOKEN"),
         # log_level=logging.DEBUG,
         root_logger=True,
