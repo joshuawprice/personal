@@ -12,23 +12,22 @@ from . import mumble
 
 
 class Bot(commands.Bot):
+    def __init__(self, *args, **kwargs):
+        self.logger = logging.getLogger(__name__)
+        super().__init__(*args, **kwargs)
+
     async def setup_hook(self):
-        await bot.add_cog(mumble.Mumble(bot))
+        await self.add_cog(mumble.Mumble(self))
 
     async def close(self):
-        logger.info("Shutting down bot...")
+        self.logger.info("Shutting down bot...")
         await super().close()
 
     async def on_ready(self):
-        logger.info(f"We have logged in as {self.user}")
+        self.logger.info(f"We have logged in as {self.user}")
 
 
-def main(): ...
-
-
-if __name__ == "__main__":
-    logger = logging.getLogger(__name__)
-
+def main():
     load_dotenv()
 
     intents = discord.Intents.default()
@@ -41,4 +40,6 @@ if __name__ == "__main__":
         root_logger=True,
     )
 
+
+if __name__ == "__main__":
     main()
