@@ -100,15 +100,12 @@ async def fetch_user_count(host, port=64738) -> int | None:
         transport.close()
 
 
-GENERAL_VOICE_CHANNEL_ID = 532274742141517828
-
-last_user_count = None
-
-
 class Mumble(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(__name__)
+        self.last_user_count = None
+        self.GENERAL_VOICE_CHANNEL_ID = 532274742141517828
 
     async def cog_load(self):
         self.update_mumble_user_count.start()
@@ -117,7 +114,7 @@ class Mumble(commands.Cog):
         self.logger.info("Unloading mumble cog...")
 
         self.update_mumble_user_count.cancel()
-        general_voice_channel = self.bot.get_channel(GENERAL_VOICE_CHANNEL_ID)
+        general_voice_channel = self.bot.get_channel(self.GENERAL_VOICE_CHANNEL_ID)
         await general_voice_channel.edit(status=None)
 
     @commands.Cog.listener()
@@ -127,12 +124,11 @@ class Mumble(commands.Cog):
 
         # When last user leaves the voice channel, the status disappears.
         if (
-            before.channel.id == GENERAL_VOICE_CHANNEL_ID
+            before.channel.id == self.GENERAL_VOICE_CHANNEL_ID
             and len(before.channel.members) == 0
         ):
             # Required to force the channel status to update
-            global last_user_count
-            last_user_count = None
+            self.last_user_count = None
 
             await self.update_mumble_user_count()
 
@@ -161,13 +157,12 @@ class Mumble(commands.Cog):
             self.logger.debug("Mumble ping timed out")
             return
 
-        global last_user_count
-        if current_user_count == last_user_count:
+        if current_user_count == self.last_user_count:
             return
 
-        last_user_count = current_user_count
+        self.last_user_count = current_user_count
 
-        general_voice_channel = self.bot.get_channel(GENERAL_VOICE_CHANNEL_ID)
+        general_voice_channel = self.bot.get_channel(self.GENERAL_VOICE_CHANNEL_ID)
         pluralised_user_string = "users" if current_user_count != 1 else "user"
         self.logger.info("Updating status of general voice channel in jp")
         await general_voice_channel.edit(
