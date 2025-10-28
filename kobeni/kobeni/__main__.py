@@ -1,115 +1,26 @@
 # TODO:
 # - Handle the exceptions listed here: https://discordpy.readthedocs.io/en/stable/api.html#discord.Client.connect
-# - Move to using cogs
-# - Pick a better way of getting the address to ping (eg asgard.bifrost/jprice.uk)
 
-import asyncio
-from datetime import datetime, timezone
 import logging
 import os
 
 import discord
 from discord.ext import commands
-from discord.ext import tasks
 from dotenv import load_dotenv
 
 from . import mumble
 
 
-GENERAL_VOICE_CHANNEL_ID = 532274742141517828
-
-last_user_count = None
-
-
 class Bot(commands.Bot):
     async def setup_hook(self):
-        update_mumble_user_count.start()
+        await bot.add_cog(mumble.Mumble(bot))
 
     async def close(self):
         logger.info("Shutting down bot...")
-
-        update_mumble_user_count.cancel()
-        general_voice_channel = bot.get_channel(GENERAL_VOICE_CHANNEL_ID)
-        await general_voice_channel.edit(status=None)
-
         await super().close()
 
     async def on_ready(self):
         logger.info(f"We have logged in as {self.user}")
-
-    async def on_message(self, message):
-        if message.author == bot.user:
-            return
-
-        if message.content.startswith("$hello"):
-            await message.channel.send("Hello!")
-
-    async def on_voice_state_update(self, member, before, after):
-        if before.channel is None:
-            return
-
-        # When last user leaves the voice channel, the status disappears.
-        if (
-            before.channel.id == GENERAL_VOICE_CHANNEL_ID
-            and len(before.channel.members) == 0
-        ):
-            # Required to force the channel status to update
-            global last_user_count
-            last_user_count = None
-
-            await update_mumble_user_count()
-
-
-# Was listening to 初恋のこたえ and this happened to be the bpm :)
-@tasks.loop(seconds=0.3243243243243244)
-async def update_mumble_user_count():
-    logger.debug("Entering update_mumble_user_count()")
-
-    # If the loop gets behind, it will try to catchup all delayed runs.
-    # This just prevents it doing that and spamming the server.
-    current_time = datetime.now(timezone.utc)
-    next_iteration_time = update_mumble_user_count.next_iteration
-    if next_iteration_time is not None and current_time >= next_iteration_time:
-        logger.debug("Restarting update_mumble_user_count() task")
-        update_mumble_user_count.restart()
-        return
-
-    try:
-        async with asyncio.timeout(1):
-            logger.debug("Calling mumble.fetch_user_count()")
-            current_user_count = await mumble.fetch_user_count("asgard.bifrost")
-    except TimeoutError:
-        # I'm finding a somewhat substantial number of udp pings seem
-        # to be getting dropped somewhere, so I guess this is pretty
-        # much just normal behaviour.
-        logger.debug("Mumble ping timed out")
-        return
-
-    global last_user_count
-    if current_user_count == last_user_count:
-        return
-
-    last_user_count = current_user_count
-
-    general_voice_channel = bot.get_channel(GENERAL_VOICE_CHANNEL_ID)
-    pluralised_user_string = "users" if current_user_count != 1 else "user"
-    logger.info("Updating status of general voice channel in jp")
-    await general_voice_channel.edit(
-        status=f"{current_user_count} {pluralised_user_string} on Mumble"
-    )
-
-    voice_client = bot.get_guild(532274742141517824).voice_client
-    if current_user_count > 0 and voice_client is None:
-        logger.info("Connecting to general voice channel in jp")
-        await general_voice_channel.connect()
-    elif current_user_count == 0 and voice_client is not None:
-        logger.info("Disconnecting from general voice channel in jp")
-        await voice_client.disconnect()
-
-
-@update_mumble_user_count.before_loop
-async def wait_until_ready():
-    await bot.wait_until_ready()
 
 
 def main(): ...

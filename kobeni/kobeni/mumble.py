@@ -21,6 +21,7 @@ except VersionError as e:
 # - Check return address matches sending address?
 # - General tidy:
 #   - https://docs.python.org/3/library/asyncio-protocol.html#transports-hierarchy
+# - Pick a better way of getting the address to ping (eg asgard.bifrost/jprice.uk)
 
 
 def encode_ping() -> MumbleUDP_pb2.Ping:
