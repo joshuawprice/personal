@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timezone
 import logging
+import socket
 import struct
 import time
 
@@ -21,7 +22,6 @@ except VersionError as e:
 # - Check return address matches sending address?
 # - General tidy:
 #   - https://docs.python.org/3/library/asyncio-protocol.html#transports-hierarchy
-# - Pick a better way of getting the address to ping (eg asgard.bifrost/jprice.uk)
 
 
 def encode_ping() -> MumbleUDP_pb2.Ping:
@@ -100,14 +100,32 @@ async def fetch_user_count(host, port=64738) -> int | None:
         transport.close()
 
 
+async def _get_server_host():
+    loop = asyncio.get_running_loop()
+
+    hosts = ["mumble", "asgard.bifrost"]
+    for host in hosts:
+        try:
+            await loop.getaddrinfo(host, 64738, proto=socket.IPPROTO_UDP)
+        except socket.gaierror:
+            pass
+        else:
+            return host
+    return "mumble.kruitana.com"
+
+
 class Mumble(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(__name__)
+        self.server_host = None
         self.last_user_count = None
         self.GENERAL_VOICE_CHANNEL_ID = 532274742141517828
 
     async def cog_load(self):
+        self.server_host = await _get_server_host()
+        self.logger.info("Setting mumble server_host to: " + self.server_host)
+
         self.update_mumble_user_count.start()
 
     async def cog_unload(self):
@@ -148,8 +166,10 @@ class Mumble(commands.Cog):
 
         try:
             async with asyncio.timeout(1):
-                self.logger.debug("Calling mumble.fetch_user_count()")
-                current_user_count = await fetch_user_count("asgard.bifrost")
+                self.logger.debug(
+                    f'Calling mumble.fetch_user_count("{self.server_host}")'
+                )
+                current_user_count = await fetch_user_count(self.server_host)
         except TimeoutError:
             # I'm finding a somewhat substantial number of udp pings seem
             # to be getting dropped somewhere, so I guess this is pretty
