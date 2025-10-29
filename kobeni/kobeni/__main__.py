@@ -34,6 +34,9 @@ def main():
     intents.message_content = True
     bot = Bot(command_prefix="$", intents=intents)
 
+    if not os.getenv("TOKEN"):
+        raise ValueError("Missing discord token.")
+
     bot.run(
         os.getenv("TOKEN"),
         # log_level=logging.DEBUG,
