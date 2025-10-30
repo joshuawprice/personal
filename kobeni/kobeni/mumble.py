@@ -4,6 +4,7 @@ import logging
 import socket
 import struct
 import time
+import os
 
 from discord.ext import commands, tasks
 from google.protobuf.runtime_version import VersionError
@@ -120,7 +121,9 @@ class Mumble(commands.Cog):
         self.logger = logging.getLogger(__name__)
         self.server_host = None
         self.last_user_count = None
-        self.GENERAL_VOICE_CHANNEL_ID = 532274742141517828
+        self.status_channel_id = int(os.getenv("MUMBLE_CHANNEL"))
+        if self.status_channel_id is None:
+            raise ValueError("No status channel provided")
 
     async def cog_load(self):
         self.server_host = await _get_server_host()
@@ -132,7 +135,7 @@ class Mumble(commands.Cog):
         self.logger.info("Unloading mumble cog...")
 
         self.update_mumble_user_count.cancel()
-        general_voice_channel = self.bot.get_channel(self.GENERAL_VOICE_CHANNEL_ID)
+        general_voice_channel = self.bot.get_channel(self.status_channel_id)
         await general_voice_channel.edit(status=None)
 
     @commands.Cog.listener()
@@ -142,7 +145,7 @@ class Mumble(commands.Cog):
 
         # When last user leaves the voice channel, the status disappears.
         if (
-            before.channel.id == self.GENERAL_VOICE_CHANNEL_ID
+            before.channel.id == self.status_channel_id
             and len(before.channel.members) == 0
         ):
             # Required to force the channel status to update
@@ -182,19 +185,21 @@ class Mumble(commands.Cog):
 
         self.last_user_count = current_user_count
 
-        general_voice_channel = self.bot.get_channel(self.GENERAL_VOICE_CHANNEL_ID)
+        channel = self.bot.get_channel(self.status_channel_id)
+        name = channel.name
+        guild = channel.guild
         pluralised_user_string = "users" if current_user_count != 1 else "user"
-        self.logger.info("Updating status of general voice channel in jp")
-        await general_voice_channel.edit(
+        self.logger.info(f"Updating status of {name} in {guild.name}")
+        await channel.edit(
             status=f"{current_user_count} {pluralised_user_string} on Mumble"
         )
 
-        voice_client = self.bot.get_guild(532274742141517824).voice_client
+        voice_client = guild.voice_client
         if current_user_count > 0 and voice_client is None:
-            self.logger.info("Connecting to general voice channel in jp")
-            await general_voice_channel.connect()
+            self.logger.info(f"Connecting to {name} in {guild.name}")
+            await channel.connect()
         elif current_user_count == 0 and voice_client is not None:
-            self.logger.info("Disconnecting from general voice channel in jp")
+            self.logger.info(f"Disconnecting from {name} in {guild.name}")
             await voice_client.disconnect()
 
     @update_mumble_user_count.before_loop
