@@ -3,6 +3,7 @@
 
 \header {
   title = "THE BRITISH LEGION"
+  pdftitle = "The British Legion"
   subtitle = "The Official March of the British Legion"
   subsubtitle = \markup { \raise #1.5 { "March" } }
   composer = \markup { \raise #1.5 { "T. Bidgood" } }
