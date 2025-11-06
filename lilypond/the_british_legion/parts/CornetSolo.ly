@@ -1,6 +1,6 @@
 \version "2.24.1"
 
-\include "../Globals.ily"
+\include "../globals.ily"
 
 \header {
   instrument = \markup {
