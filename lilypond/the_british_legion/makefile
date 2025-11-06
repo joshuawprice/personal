@@ -1,6 +1,7 @@
 piece = TheBritishLegion
 
 LILYFLAGS = -dno-point-and-click
+MAKEFLAGS += -j$(shell nproc)
 
 sources = $(patsubst Parts/%,%,$(wildcard Parts/*.ly))
 
