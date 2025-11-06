@@ -1,6 +1,3 @@
-# TODO:
-#   - Can I build using `make cornetone` (using default rule)?
-
 piece = TheBritishLegion
 
 LILYFLAGS = -dno-point-and-click
@@ -14,6 +11,9 @@ out:; mkdir out
 
 out/$(piece)-%.pdf out/$(piece)-%.midi: Parts/%.ly Globals.ily | out
 	lilypond $(LILYFLAGS) -o $(basename $@) $<
+
+.SECONDEXPANSION:
+$(sources:.ly=): out/$(piece)-$$@.pdf
 
 .PHONY: clean
 clean:
