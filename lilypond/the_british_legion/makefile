@@ -3,14 +3,14 @@ piece = TheBritishLegion
 LILYFLAGS = -dno-point-and-click
 MAKEFLAGS += -j$(shell nproc)
 
-sources = $(patsubst Parts/%,%,$(wildcard Parts/*.ly))
+sources = $(patsubst parts/%,%,$(wildcard parts/*.ly))
 
 .PHONY: parts
 parts: $(sources:%.ly=out/$(piece)-%.pdf)
 
 out:; mkdir out
 
-out/$(piece)-%.pdf out/$(piece)-%.midi: Parts/%.ly Globals.ily | out
+out/$(piece)-%.pdf out/$(piece)-%.midi: parts/%.ly Globals.ily | out
 	lilypond $(LILYFLAGS) -o $(basename $@) $<
 
 .SECONDEXPANSION:
