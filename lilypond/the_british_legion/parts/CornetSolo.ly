@@ -6,7 +6,7 @@
   instrument = \markup {
     \raise #1.5 {
       \column {
-        \line { "Solo B" \tiny { \hspace #-0.5 { \raise #0.5 { \flat } } } "Cornet" } % TODO: In lilypond 2.26 \text-flat should exist.
+        \line { Solo \concat { B \raise #0.5 \tiny \flat } Cornet } % TODO: In lilypond 2.26 \text-flat should exist.
       }
     }
   }

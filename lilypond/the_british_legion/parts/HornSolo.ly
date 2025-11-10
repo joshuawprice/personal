@@ -6,8 +6,8 @@
   instrument = \markup {
     \raise #1.5 {
       \column \center-align {
-        \line { "Solo" E \tiny { \hspace #-0.5 { \raise #0.5 { \flat } } } "Saxhorn" }
-        \line { "(E" \tiny { \hspace #-0.5 { \raise #0.5 { \flat } } } "Alto)"  }
+        \line { Solo \concat { E \raise #0.5 \tiny \flat } Saxhorn }
+        \line { \concat { (E \raise #0.5 \tiny \flat } Alto)  }
       }
     }
   }

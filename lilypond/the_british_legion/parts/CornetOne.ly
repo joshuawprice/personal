@@ -7,7 +7,7 @@
     \raise #1.5 {
       \column {
         "Repiano / Flugel /"
-        \line { 1 \super {\hspace #-0.6 st } B \tiny { \hspace #-0.5 { \raise #0.5 { \flat } } } "Cornet"  }
+        \line { \concat { 1 \super st } \concat { B \raise #0.5 \tiny \flat } Cornet }
       }
     }
   }
