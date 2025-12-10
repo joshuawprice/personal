@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 import logging
 from pathlib import Path
@@ -173,6 +173,7 @@ class Mumble(commands.Cog):
         self.server_host = None
         self.last_user_count = None
         self.users = None
+        self.last_iteration = datetime.now(timezone.utc) - timedelta(minutes=1.67)
         self.status_channel_id = int(os.getenv("MUMBLE_CHANNEL"))
         if self.status_channel_id is None:
             raise ValueError("No status channel provided")
@@ -254,8 +255,6 @@ class Mumble(commands.Cog):
         if current_user_count == self.last_user_count:
             return
 
-        self.last_user_count = current_user_count
-
         channel = self.bot.get_channel(self.status_channel_id)
         name = channel.name
         guild = channel.guild
@@ -272,6 +271,25 @@ class Mumble(commands.Cog):
         elif current_user_count == 0 and voice_client is not None:
             self.logger.info(f"Disconnecting from {name} in {guild.name}")
             await voice_client.disconnect()
+
+        # Send out notifications.
+        if self.last_user_count == 0 and current_user_count > 0:
+            if datetime.now(timezone.utc) - self.last_iteration <= timedelta(minutes=2):
+                self.logger.info("Not pinging due to cooldown.")
+            else:
+                self.logger.info("Pinging users for Mumble")
+                msg = "Mumble just became active!"
+                results = await asyncio.gather(
+                    *[self._send_notification(user, msg) for user in self.users],
+                    return_exceptions=True,
+                )
+
+                for user, result in zip(self.users, results):
+                    if isinstance(result, Exception):
+                        self.logger.warning(f"Failed to notify {user}: {result}")
+
+        self.last_user_count = current_user_count
+        self.last_iteration = datetime.now(timezone.utc)
 
     # This runs even on loop.restart()
     @update_mumble_user_count.before_loop
