@@ -29,6 +29,8 @@ class Bot(commands.Bot):
 
 def main():
     load_dotenv()
+    discord.utils.setup_logging()
+    logger = logging.getLogger(__name__)
 
     intents = discord.Intents.default()
     intents.message_content = True
@@ -37,11 +39,7 @@ def main():
     if not os.getenv("TOKEN"):
         raise ValueError("Missing discord token.")
 
-    bot.run(
-        os.getenv("TOKEN"),
-        # log_level=logging.DEBUG,
-        root_logger=True,
-    )
+    bot.run(os.getenv("TOKEN"), log_handler=None)
 
 
 if __name__ == "__main__":
