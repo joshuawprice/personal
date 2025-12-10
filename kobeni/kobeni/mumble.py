@@ -1,11 +1,14 @@
 import asyncio
 from datetime import datetime, timezone
+import json
 import logging
+from pathlib import Path
 import socket
 import struct
 import time
 import os
 
+import discord
 from discord.ext import commands, tasks
 from google.protobuf.runtime_version import VersionError
 
@@ -115,12 +118,61 @@ async def _get_server_host():
     return "mumble.kruitana.com"
 
 
+class Notify_Users:
+    """
+    Manages the list of users to receive notifications when the mumble server becomes active.
+    """
+
+    def __init__(self, bot):
+        logger = logging.getLogger(__name__)
+
+        config: Path = Path("config")
+        config.mkdir(exist_ok=True)
+        self._backing_file: Path = config / "mumble-notify-users.json"
+
+        self._users: list[discord.User] = []
+        try:
+            with open(self._backing_file) as f:
+                user_ids: list[int] = json.load(f)
+                self._users = [bot.get_user(id) for id in user_ids]
+        except FileNotFoundError:
+            self._users = []
+            logger.debug(f"{self._backing_file} not found. Starting from scratch.")
+            pass
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            logger.warning(
+                "Error reading list of users to be notified. Starting from scratch."
+            )
+
+    def __contains__(self, user: discord.User, /):
+        return self._users.__contains__(user)
+
+    def __getitem__(self, key):
+        return self._users.__getitem__(key)
+
+    def __len__(self):
+        return self._users.__len__()
+
+    def append(self, user, /):
+        self._users.append(user)
+
+        with open(self._backing_file, "w") as f:
+            json.dump([user.id for user in self._users], f)
+
+    def remove(self, user, /):
+        self._users.remove(user)
+
+        with open(self._backing_file, "w") as f:
+            json.dump([user.id for user in self._users], f)
+
+
 class Mumble(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(__name__)
         self.server_host = None
         self.last_user_count = None
+        self.users = None
         self.status_channel_id = int(os.getenv("MUMBLE_CHANNEL"))
         if self.status_channel_id is None:
             raise ValueError("No status channel provided")
@@ -152,6 +204,25 @@ class Mumble(commands.Cog):
             self.last_user_count = None
 
             await self.update_mumble_user_count()
+
+    @commands.command()
+    async def notify(self, ctx):
+        """
+        Toggles DM notifications for activity on the Mumble server
+        """
+        user = ctx.message.author
+
+        if user in self.users:
+            self.users.remove(user)
+            await ctx.message.add_reaction("🔕")
+        else:
+            self.users.append(user)
+            await ctx.message.add_reaction("🔔")
+
+    async def _send_notification(self, user, msg):
+        """Helper method to send DM notification."""
+        dm = user.dm_channel or await user.create_dm()
+        await dm.send(msg)
 
     # Was listening to 初恋のこたえ and this happened to be the bpm :)
     @tasks.loop(seconds=0.3243243243243244)
@@ -202,6 +273,9 @@ class Mumble(commands.Cog):
             self.logger.info(f"Disconnecting from {name} in {guild.name}")
             await voice_client.disconnect()
 
+    # This runs even on loop.restart()
     @update_mumble_user_count.before_loop
     async def wait_until_ready(self):
         await self.bot.wait_until_ready()
+        # Must wait until the member cache is populated.
+        self.users = Notify_Users(self.bot)

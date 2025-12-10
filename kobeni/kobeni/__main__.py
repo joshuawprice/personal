@@ -34,6 +34,7 @@ def main():
 
     intents = discord.Intents.default()
     intents.message_content = True
+    intents.members = True
 
     prefix = os.getenv("PREFIX") or "!"
     logger.info(f"Setting prefix: {prefix}")
