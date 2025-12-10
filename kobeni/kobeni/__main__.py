@@ -34,7 +34,11 @@ def main():
 
     intents = discord.Intents.default()
     intents.message_content = True
-    bot = Bot(command_prefix="$", intents=intents)
+
+    prefix = os.getenv("PREFIX") or "!"
+    logger.info(f"Setting prefix: {prefix}")
+
+    bot = Bot(command_prefix=prefix, intents=intents)
 
     if not os.getenv("TOKEN"):
         raise ValueError("Missing discord token.")
