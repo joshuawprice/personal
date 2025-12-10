@@ -182,12 +182,12 @@ class Mumble(commands.Cog):
         self.server_host = await _get_server_host()
         self.logger.info("Setting mumble server_host to: " + self.server_host)
 
-        self.update_mumble_user_count.start()
+        self.ping_loop.start()
 
     async def cog_unload(self):
         self.logger.info("Unloading mumble cog...")
 
-        self.update_mumble_user_count.cancel()
+        self.ping_loop.cancel()
         general_voice_channel = self.bot.get_channel(self.status_channel_id)
         await general_voice_channel.edit(status=None)
 
@@ -204,7 +204,7 @@ class Mumble(commands.Cog):
             # Required to force the channel status to update
             self.last_user_count = None
 
-            await self.update_mumble_user_count()
+            await self.ping_loop()
 
     @commands.command()
     async def notify(self, ctx):
@@ -227,16 +227,16 @@ class Mumble(commands.Cog):
 
     # Was listening to 初恋のこたえ and this happened to be the bpm :)
     @tasks.loop(seconds=0.3243243243243244)
-    async def update_mumble_user_count(self):
-        self.logger.debug("Entering update_mumble_user_count()")
+    async def ping_loop(self):
+        self.logger.debug("Entering ping_loop()")
 
         # If the loop gets behind, it will try to catchup all delayed runs.
         # This just prevents it doing that and spamming the server.
         current_time = datetime.now(timezone.utc)
-        next_iteration_time = self.update_mumble_user_count.next_iteration
+        next_iteration_time = self.ping_loop.next_iteration
         if next_iteration_time is not None and current_time >= next_iteration_time:
-            self.logger.debug("Restarting update_mumble_user_count() task")
-            self.update_mumble_user_count.restart()
+            self.logger.debug("Restarting ping_loop() task")
+            self.ping_loop.restart()
             return
 
         try:
@@ -292,7 +292,7 @@ class Mumble(commands.Cog):
         self.last_iteration = datetime.now(timezone.utc)
 
     # This runs even on loop.restart()
-    @update_mumble_user_count.before_loop
+    @ping_loop.before_loop
     async def wait_until_ready(self):
         await self.bot.wait_until_ready()
         # Must wait until the member cache is populated.
