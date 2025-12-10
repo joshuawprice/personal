@@ -25,8 +25,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 FROM python:3.13-slim-trixie
 
-RUN groupadd --system --gid 999 nonroot \
-    && useradd --system --gid 999 --uid 999 --create-home nonroot
+RUN groupadd --system --gid 1000 nonroot \
+    && useradd --system --gid 1000 --uid 1000 --create-home nonroot
 
 COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
 
