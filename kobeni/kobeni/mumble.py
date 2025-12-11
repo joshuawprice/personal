@@ -206,10 +206,7 @@ class Mumble(commands.Cog):
             before.channel.id == self.voice_channel_id
             and len(before.channel.members) == 0
         ):
-            # Required to force the channel status to update
-            self.last_user_count = None
-
-            await self.ping_loop()
+            await self._update_channel_status()
 
     @commands.command()
     async def notify(self, ctx):
