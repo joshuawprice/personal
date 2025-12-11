@@ -173,7 +173,6 @@ class Mumble(commands.Cog):
 
         self.server_host: str
         self.user_count: int
-        self.last_user_count = None
         self.users = None
         self.last_iteration = datetime.now(timezone.utc) - timedelta(minutes=1.67)
 
@@ -265,9 +264,9 @@ class Mumble(commands.Cog):
             self.logger.info(f"Disconnecting from {channel.name} in {guild.name}")
             await voice_client.disconnect()
 
-    async def _send_notifications_if_needed(self) -> None:
+    async def _send_notifications_if_needed(self, last_user_count: int) -> None:
         """Send notifications when Mumble becomes active after cooldown."""
-        if not (self.last_user_count == 0 and self.user_count > 0):
+        if not (last_user_count == 0 and self.user_count > 0):
             return
 
         if self._is_on_cooldown():
@@ -308,19 +307,19 @@ class Mumble(commands.Cog):
             self.ping_loop.restart()
             return
 
+        last_user_count = self.user_count
         self.user_count = await self._fetch_current_user_count()
 
         # Only update discord if there's actually a change on the server.
-        if self.user_count is None or self.user_count == self.last_user_count:
+        if self.user_count is None or self.user_count == last_user_count:
             return
 
         await asyncio.gather(
             self._update_channel_status(),
             self._manage_voice_connection(),
-            self._send_notifications_if_needed(),
+            self._send_notifications_if_needed(last_user_count),
         )
 
-        self.last_user_count = self.user_count
         self.last_iteration = datetime.now(timezone.utc)
 
     # This runs even on loop.restart()
