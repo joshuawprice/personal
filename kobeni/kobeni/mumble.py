@@ -118,7 +118,7 @@ async def _get_server_host():
     return "mumble.kruitana.com"
 
 
-class Notify_Users:
+class NotifyUsers:
     """
     Manages the list of users to receive notifications when the mumble server becomes active.
     """
@@ -323,4 +323,4 @@ class Mumble(commands.Cog):
     async def wait_until_ready(self):
         await self.bot.wait_until_ready()
         # Must wait until the member cache is populated.
-        self.users = Notify_Users(self.bot)
+        self.users = NotifyUsers(self.bot)
