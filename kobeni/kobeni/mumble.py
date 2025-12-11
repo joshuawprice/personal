@@ -171,6 +171,7 @@ class Mumble(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger(__name__)
         self.server_host = None
+        self.user_count: int
         self.last_user_count = None
         self.users = None
         self.last_iteration = datetime.now(timezone.utc) - timedelta(minutes=1.67)
@@ -183,6 +184,8 @@ class Mumble(commands.Cog):
     async def cog_load(self):
         self.server_host = await _get_server_host()
         self.logger.info("Setting mumble server_host to: " + self.server_host)
+
+        self.user_count = await self._fetch_current_user_count()
 
         self.ping_loop.start()
 
@@ -241,30 +244,32 @@ class Mumble(commands.Cog):
             self.logger.debug("Mumble ping timed out")
             return None
 
-    async def _update_channel_status(self, user_count: int) -> None:
+    async def _update_channel_status(self) -> None:
         """Update Discord channel status with current user count."""
         channel = self.bot.get_channel(self.voice_channel_id)
-        pluralised_user_string = "user" if user_count == 1 else "users"
+        pluralised_user_string = "user" if self.user_count == 1 else "users"
 
         self.logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
-        await channel.edit(status=f"{user_count} {pluralised_user_string} on Mumble")
+        await channel.edit(
+            status=f"{self.user_count} {pluralised_user_string} on Mumble"
+        )
 
-    async def _manage_voice_connection(self, user_count: int) -> None:
+    async def _manage_voice_connection(self) -> None:
         """Connect or disconnect voice client based on user count."""
         channel = self.bot.get_channel(self.voice_channel_id)
         guild = channel.guild
         voice_client = guild.voice_client
 
-        if user_count > 0 and voice_client is None:
+        if self.user_count > 0 and voice_client is None:
             self.logger.info(f"Connecting to {channel.name} in {guild.name}")
             await channel.connect(self_mute=True, self_deaf=True)
-        elif user_count == 0 and voice_client is not None:
+        elif self.user_count == 0 and voice_client is not None:
             self.logger.info(f"Disconnecting from {channel.name} in {guild.name}")
             await voice_client.disconnect()
 
-    async def _send_notifications_if_needed(self, user_count: int) -> None:
+    async def _send_notifications_if_needed(self) -> None:
         """Send notifications when Mumble becomes active after cooldown."""
-        if not (self.last_user_count == 0 and user_count > 0):
+        if not (self.last_user_count == 0 and self.user_count > 0):
             return
 
         if self._is_on_cooldown():
@@ -305,19 +310,19 @@ class Mumble(commands.Cog):
             self.ping_loop.restart()
             return
 
-        current_user_count = await self._fetch_current_user_count()
+        self.user_count = await self._fetch_current_user_count()
 
         # Only update discord if there's actually a change on the server.
-        if current_user_count is None or current_user_count == self.last_user_count:
+        if self.user_count is None or self.user_count == self.last_user_count:
             return
 
         await asyncio.gather(
-            self._update_channel_status(current_user_count),
-            self._manage_voice_connection(current_user_count),
-            self._send_notifications_if_needed(current_user_count),
+            self._update_channel_status(),
+            self._manage_voice_connection(),
+            self._send_notifications_if_needed(),
         )
 
-        self.last_user_count = current_user_count
+        self.last_user_count = self.user_count
         self.last_iteration = datetime.now(timezone.utc)
 
     # This runs even on loop.restart()
