@@ -309,9 +309,11 @@ class Mumble(commands.Cog):
         if current_user_count is None or current_user_count == self.last_user_count:
             return
 
-        await self._update_channel_status(current_user_count)
-        await self._manage_voice_connection(current_user_count)
-        await self._send_notifications_if_needed(current_user_count)
+        await asyncio.gather(
+            self._update_channel_status(current_user_count),
+            self._manage_voice_connection(current_user_count),
+            self._send_notifications_if_needed(current_user_count),
+        )
 
         self.last_user_count = current_user_count
         self.last_iteration = datetime.now(timezone.utc)
