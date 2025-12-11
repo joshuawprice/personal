@@ -86,7 +86,7 @@ class MumbleClientProtocol:
         self.on_con_lost.set_result(None)
 
 
-async def fetch_user_count(host, port=64738) -> int | None:
+async def fetch_user_count(host: str, port: int = 64738) -> int | None:
     loop = asyncio.get_running_loop()
 
     encoded_ping = encode_ping()
@@ -170,7 +170,8 @@ class Mumble(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(__name__)
-        self.server_host = None
+
+        self.server_host: str
         self.user_count: int
         self.last_user_count = None
         self.users = None
