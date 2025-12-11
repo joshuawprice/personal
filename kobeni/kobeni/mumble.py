@@ -226,6 +226,19 @@ class Mumble(commands.Cog):
         next_iteration_time = self.ping_loop.next_iteration
         return next_iteration_time is not None and current_time >= next_iteration_time
 
+    async def _fetch_current_user_count(self) -> int | None:
+        """Fetch current user count with timeout handling."""
+        try:
+            async with asyncio.timeout(1):
+                self.logger.debug(f'Calling fetch_user_count("{self.server_host}")')
+                return await fetch_user_count(self.server_host)
+        except TimeoutError:
+            # I'm finding a somewhat substantial number of udp pings seem
+            # to be getting dropped somewhere, so I guess this is pretty
+            # much just normal behaviour.
+            self.logger.debug("Mumble ping timed out")
+            return None
+
     async def _send_notification(self, user, msg):
         """Helper method to send DM notification."""
         dm = user.dm_channel or await user.create_dm()
@@ -243,20 +256,10 @@ class Mumble(commands.Cog):
             self.ping_loop.restart()
             return
 
-        try:
-            async with asyncio.timeout(1):
-                self.logger.debug(
-                    f'Calling mumble.fetch_user_count("{self.server_host}")'
-                )
-                current_user_count = await fetch_user_count(self.server_host)
-        except TimeoutError:
-            # I'm finding a somewhat substantial number of udp pings seem
-            # to be getting dropped somewhere, so I guess this is pretty
-            # much just normal behaviour.
-            self.logger.debug("Mumble ping timed out")
-            return
+        current_user_count = await self._fetch_current_user_count()
 
-        if current_user_count == self.last_user_count:
+        # Only update discord if there's actually a change on the server.
+        if current_user_count is None or current_user_count == self.last_user_count:
             return
 
         channel = self.bot.get_channel(self.status_channel_id)
