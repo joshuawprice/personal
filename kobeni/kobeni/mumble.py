@@ -220,6 +220,12 @@ class Mumble(commands.Cog):
             self.users.append(user)
             await ctx.message.add_reaction("🔔")
 
+    def _is_ping_loop_behind(self) -> bool:
+        """Check if loop has fallen behind and needs restart."""
+        current_time = datetime.now(timezone.utc)
+        next_iteration_time = self.ping_loop.next_iteration
+        return next_iteration_time is not None and current_time >= next_iteration_time
+
     async def _send_notification(self, user, msg):
         """Helper method to send DM notification."""
         dm = user.dm_channel or await user.create_dm()
@@ -232,9 +238,7 @@ class Mumble(commands.Cog):
 
         # If the loop gets behind, it will try to catchup all delayed runs.
         # This just prevents it doing that and spamming the server.
-        current_time = datetime.now(timezone.utc)
-        next_iteration_time = self.ping_loop.next_iteration
-        if next_iteration_time is not None and current_time >= next_iteration_time:
+        if self._is_ping_loop_behind():
             self.logger.debug("Restarting ping_loop() task")
             self.ping_loop.restart()
             return
