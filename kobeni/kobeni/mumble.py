@@ -247,6 +247,19 @@ class Mumble(commands.Cog):
         self.logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
         await channel.edit(status=f"{user_count} {pluralised_user_string} on Mumble")
 
+    async def _manage_voice_connection(self, user_count: int) -> None:
+        """Connect or disconnect voice client based on user count."""
+        channel = self.bot.get_channel(self.status_channel_id)
+        guild = channel.guild
+        voice_client = guild.voice_client
+
+        if user_count > 0 and voice_client is None:
+            self.logger.info(f"Connecting to {channel.name} in {guild.name}")
+            await channel.connect(self_mute=True, self_deaf=True)
+        elif user_count == 0 and voice_client is not None:
+            self.logger.info(f"Disconnecting from {channel.name} in {guild.name}")
+            await voice_client.disconnect()
+
     async def _send_notification(self, user, msg):
         """Helper method to send DM notification."""
         dm = user.dm_channel or await user.create_dm()
@@ -271,17 +284,7 @@ class Mumble(commands.Cog):
             return
 
         await self._update_channel_status(current_user_count)
-
-        channel = self.bot.get_channel(self.status_channel_id)
-        guild = channel.guild
-        name = channel.name
-        voice_client = guild.voice_client
-        if current_user_count > 0 and voice_client is None:
-            self.logger.info(f"Connecting to {name} in {guild.name}")
-            await channel.connect(self_mute=True, self_deaf=True)
-        elif current_user_count == 0 and voice_client is not None:
-            self.logger.info(f"Disconnecting from {name} in {guild.name}")
-            await voice_client.disconnect()
+        await self._manage_voice_connection(current_user_count)
 
         # Send out notifications.
         if self.last_user_count == 0 and current_user_count > 0:
