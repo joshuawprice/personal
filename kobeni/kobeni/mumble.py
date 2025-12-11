@@ -239,6 +239,14 @@ class Mumble(commands.Cog):
             self.logger.debug("Mumble ping timed out")
             return None
 
+    async def _update_channel_status(self, user_count: int) -> None:
+        """Update Discord channel status with current user count."""
+        channel = self.bot.get_channel(self.status_channel_id)
+        pluralised_user_string = "user" if user_count == 1 else "users"
+
+        self.logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
+        await channel.edit(status=f"{user_count} {pluralised_user_string} on Mumble")
+
     async def _send_notification(self, user, msg):
         """Helper method to send DM notification."""
         dm = user.dm_channel or await user.create_dm()
@@ -262,15 +270,11 @@ class Mumble(commands.Cog):
         if current_user_count is None or current_user_count == self.last_user_count:
             return
 
-        channel = self.bot.get_channel(self.status_channel_id)
-        name = channel.name
-        guild = channel.guild
-        pluralised_user_string = "users" if current_user_count != 1 else "user"
-        self.logger.info(f"Updating status of {name} in {guild.name}")
-        await channel.edit(
-            status=f"{current_user_count} {pluralised_user_string} on Mumble"
-        )
+        await self._update_channel_status(current_user_count)
 
+        channel = self.bot.get_channel(self.status_channel_id)
+        guild = channel.guild
+        name = channel.name
         voice_client = guild.voice_client
         if current_user_count > 0 and voice_client is None:
             self.logger.info(f"Connecting to {name} in {guild.name}")
