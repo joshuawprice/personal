@@ -260,6 +260,32 @@ class Mumble(commands.Cog):
             self.logger.info(f"Disconnecting from {channel.name} in {guild.name}")
             await voice_client.disconnect()
 
+    async def _send_notifications_if_needed(self, user_count: int) -> None:
+        """Send notifications when Mumble becomes active after cooldown."""
+        if not (self.last_user_count == 0 and user_count > 0):
+            return
+
+        if self._is_on_cooldown():
+            self.logger.info("Not pinging due to cooldown.")
+            return
+
+        self.logger.info("Pinging users for Mumble")
+        msg = "Mumble just became active!"
+        results = await asyncio.gather(
+            *[self._send_notification(user, msg) for user in self.users],
+            return_exceptions=True,
+        )
+
+        for user, result in zip(self.users, results):
+            if isinstance(result, Exception):
+                self.logger.warning(f"Failed to notify {user}: {result}")
+
+    def _is_on_cooldown(self) -> bool:
+        """Check if notification cooldown is active."""
+        cooldown_period = timedelta(minutes=2)
+        time_since_last = datetime.now(timezone.utc) - self.last_iteration
+        return time_since_last <= cooldown_period
+
     async def _send_notification(self, user, msg):
         """Helper method to send DM notification."""
         dm = user.dm_channel or await user.create_dm()
@@ -285,22 +311,7 @@ class Mumble(commands.Cog):
 
         await self._update_channel_status(current_user_count)
         await self._manage_voice_connection(current_user_count)
-
-        # Send out notifications.
-        if self.last_user_count == 0 and current_user_count > 0:
-            if datetime.now(timezone.utc) - self.last_iteration <= timedelta(minutes=2):
-                self.logger.info("Not pinging due to cooldown.")
-            else:
-                self.logger.info("Pinging users for Mumble")
-                msg = "Mumble just became active!"
-                results = await asyncio.gather(
-                    *[self._send_notification(user, msg) for user in self.users],
-                    return_exceptions=True,
-                )
-
-                for user, result in zip(self.users, results):
-                    if isinstance(result, Exception):
-                        self.logger.warning(f"Failed to notify {user}: {result}")
+        await self._send_notifications_if_needed(current_user_count)
 
         self.last_user_count = current_user_count
         self.last_iteration = datetime.now(timezone.utc)
