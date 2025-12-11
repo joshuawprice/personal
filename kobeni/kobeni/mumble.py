@@ -174,9 +174,11 @@ class Mumble(commands.Cog):
         self.last_user_count = None
         self.users = None
         self.last_iteration = datetime.now(timezone.utc) - timedelta(minutes=1.67)
-        self.status_channel_id = int(os.getenv("MUMBLE_CHANNEL"))
-        if self.status_channel_id is None:
-            raise ValueError("No status channel provided")
+
+        voice_channel_id = os.getenv("MUMBLE_CHANNEL")
+        if voice_channel_id is None:
+            raise ValueError("Missing MUMBLE_CHANNEL env var.")
+        self.voice_channel_id = int(voice_channel_id)
 
     async def cog_load(self):
         self.server_host = await _get_server_host()
@@ -188,7 +190,7 @@ class Mumble(commands.Cog):
         self.logger.info("Unloading mumble cog...")
 
         self.ping_loop.cancel()
-        general_voice_channel = self.bot.get_channel(self.status_channel_id)
+        general_voice_channel = self.bot.get_channel(self.voice_channel_id)
         await general_voice_channel.edit(status=None)
 
     @commands.Cog.listener()
@@ -198,7 +200,7 @@ class Mumble(commands.Cog):
 
         # When last user leaves the voice channel, the status disappears.
         if (
-            before.channel.id == self.status_channel_id
+            before.channel.id == self.voice_channel_id
             and len(before.channel.members) == 0
         ):
             # Required to force the channel status to update
@@ -241,7 +243,7 @@ class Mumble(commands.Cog):
 
     async def _update_channel_status(self, user_count: int) -> None:
         """Update Discord channel status with current user count."""
-        channel = self.bot.get_channel(self.status_channel_id)
+        channel = self.bot.get_channel(self.voice_channel_id)
         pluralised_user_string = "user" if user_count == 1 else "users"
 
         self.logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
@@ -249,7 +251,7 @@ class Mumble(commands.Cog):
 
     async def _manage_voice_connection(self, user_count: int) -> None:
         """Connect or disconnect voice client based on user count."""
-        channel = self.bot.get_channel(self.status_channel_id)
+        channel = self.bot.get_channel(self.voice_channel_id)
         guild = channel.guild
         voice_client = guild.voice_client
 
