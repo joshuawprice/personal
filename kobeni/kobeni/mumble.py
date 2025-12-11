@@ -182,12 +182,12 @@ class Mumble(commands.Cog):
         self.server_host = await _get_server_host()
         self.logger.info("Setting mumble server_host to: " + self.server_host)
 
-        self.update_mumble_user_count.start()
+        self.ping_loop.start()
 
     async def cog_unload(self):
         self.logger.info("Unloading mumble cog...")
 
-        self.update_mumble_user_count.cancel()
+        self.ping_loop.cancel()
         general_voice_channel = self.bot.get_channel(self.status_channel_id)
         await general_voice_channel.edit(status=None)
 
@@ -204,7 +204,7 @@ class Mumble(commands.Cog):
             # Required to force the channel status to update
             self.last_user_count = None
 
-            await self.update_mumble_user_count()
+            await self.ping_loop()
 
     @commands.command()
     async def notify(self, ctx):
@@ -220,6 +220,72 @@ class Mumble(commands.Cog):
             self.users.append(user)
             await ctx.message.add_reaction("🔔")
 
+    def _is_ping_loop_behind(self) -> bool:
+        """Check if loop has fallen behind and needs restart."""
+        current_time = datetime.now(timezone.utc)
+        next_iteration_time = self.ping_loop.next_iteration
+        return next_iteration_time is not None and current_time >= next_iteration_time
+
+    async def _fetch_current_user_count(self) -> int | None:
+        """Fetch current user count with timeout handling."""
+        try:
+            async with asyncio.timeout(1):
+                self.logger.debug(f'Calling fetch_user_count("{self.server_host}")')
+                return await fetch_user_count(self.server_host)
+        except TimeoutError:
+            # I'm finding a somewhat substantial number of udp pings seem
+            # to be getting dropped somewhere, so I guess this is pretty
+            # much just normal behaviour.
+            self.logger.debug("Mumble ping timed out")
+            return None
+
+    async def _update_channel_status(self, user_count: int) -> None:
+        """Update Discord channel status with current user count."""
+        channel = self.bot.get_channel(self.status_channel_id)
+        pluralised_user_string = "user" if user_count == 1 else "users"
+
+        self.logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
+        await channel.edit(status=f"{user_count} {pluralised_user_string} on Mumble")
+
+    async def _manage_voice_connection(self, user_count: int) -> None:
+        """Connect or disconnect voice client based on user count."""
+        channel = self.bot.get_channel(self.status_channel_id)
+        guild = channel.guild
+        voice_client = guild.voice_client
+
+        if user_count > 0 and voice_client is None:
+            self.logger.info(f"Connecting to {channel.name} in {guild.name}")
+            await channel.connect(self_mute=True, self_deaf=True)
+        elif user_count == 0 and voice_client is not None:
+            self.logger.info(f"Disconnecting from {channel.name} in {guild.name}")
+            await voice_client.disconnect()
+
+    async def _send_notifications_if_needed(self, user_count: int) -> None:
+        """Send notifications when Mumble becomes active after cooldown."""
+        if not (self.last_user_count == 0 and user_count > 0):
+            return
+
+        if self._is_on_cooldown():
+            self.logger.info("Not pinging due to cooldown.")
+            return
+
+        self.logger.info("Pinging users for Mumble")
+        msg = "Mumble just became active!"
+        results = await asyncio.gather(
+            *[self._send_notification(user, msg) for user in self.users],
+            return_exceptions=True,
+        )
+
+        for user, result in zip(self.users, results):
+            if isinstance(result, Exception):
+                self.logger.warning(f"Failed to notify {user}: {result}")
+
+    def _is_on_cooldown(self) -> bool:
+        """Check if notification cooldown is active."""
+        cooldown_period = timedelta(minutes=2)
+        time_since_last = datetime.now(timezone.utc) - self.last_iteration
+        return time_since_last <= cooldown_period
+
     async def _send_notification(self, user, msg):
         """Helper method to send DM notification."""
         dm = user.dm_channel or await user.create_dm()
@@ -227,72 +293,31 @@ class Mumble(commands.Cog):
 
     # Was listening to 初恋のこたえ and this happened to be the bpm :)
     @tasks.loop(seconds=0.3243243243243244)
-    async def update_mumble_user_count(self):
-        self.logger.debug("Entering update_mumble_user_count()")
+    async def ping_loop(self):
+        self.logger.debug("Entering ping_loop()")
 
         # If the loop gets behind, it will try to catchup all delayed runs.
         # This just prevents it doing that and spamming the server.
-        current_time = datetime.now(timezone.utc)
-        next_iteration_time = self.update_mumble_user_count.next_iteration
-        if next_iteration_time is not None and current_time >= next_iteration_time:
-            self.logger.debug("Restarting update_mumble_user_count() task")
-            self.update_mumble_user_count.restart()
+        if self._is_ping_loop_behind():
+            self.logger.debug("Restarting ping_loop() task")
+            self.ping_loop.restart()
             return
 
-        try:
-            async with asyncio.timeout(1):
-                self.logger.debug(
-                    f'Calling mumble.fetch_user_count("{self.server_host}")'
-                )
-                current_user_count = await fetch_user_count(self.server_host)
-        except TimeoutError:
-            # I'm finding a somewhat substantial number of udp pings seem
-            # to be getting dropped somewhere, so I guess this is pretty
-            # much just normal behaviour.
-            self.logger.debug("Mumble ping timed out")
+        current_user_count = await self._fetch_current_user_count()
+
+        # Only update discord if there's actually a change on the server.
+        if current_user_count is None or current_user_count == self.last_user_count:
             return
 
-        if current_user_count == self.last_user_count:
-            return
-
-        channel = self.bot.get_channel(self.status_channel_id)
-        name = channel.name
-        guild = channel.guild
-        pluralised_user_string = "users" if current_user_count != 1 else "user"
-        self.logger.info(f"Updating status of {name} in {guild.name}")
-        await channel.edit(
-            status=f"{current_user_count} {pluralised_user_string} on Mumble"
-        )
-
-        voice_client = guild.voice_client
-        if current_user_count > 0 and voice_client is None:
-            self.logger.info(f"Connecting to {name} in {guild.name}")
-            await channel.connect(self_mute=True, self_deaf=True)
-        elif current_user_count == 0 and voice_client is not None:
-            self.logger.info(f"Disconnecting from {name} in {guild.name}")
-            await voice_client.disconnect()
-
-        # Send out notifications.
-        if self.last_user_count == 0 and current_user_count > 0:
-            if datetime.now(timezone.utc) - self.last_iteration <= timedelta(minutes=2):
-                self.logger.info("Not pinging due to cooldown.")
-            else:
-                self.logger.info("Pinging users for Mumble")
-                msg = "Mumble just became active!"
-                results = await asyncio.gather(
-                    *[self._send_notification(user, msg) for user in self.users],
-                    return_exceptions=True,
-                )
-
-                for user, result in zip(self.users, results):
-                    if isinstance(result, Exception):
-                        self.logger.warning(f"Failed to notify {user}: {result}")
+        await self._update_channel_status(current_user_count)
+        await self._manage_voice_connection(current_user_count)
+        await self._send_notifications_if_needed(current_user_count)
 
         self.last_user_count = current_user_count
         self.last_iteration = datetime.now(timezone.utc)
 
     # This runs even on loop.restart()
-    @update_mumble_user_count.before_loop
+    @ping_loop.before_loop
     async def wait_until_ready(self):
         await self.bot.wait_until_ready()
         # Must wait until the member cache is populated.
