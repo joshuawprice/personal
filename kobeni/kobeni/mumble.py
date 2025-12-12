@@ -189,6 +189,15 @@ class Mumble(commands.Cog):
 
         self.ping_loop.start()
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.users = NotifyUsers(self.bot)
+
+        await asyncio.gather(
+            self._update_channel_status(),
+            self._manage_voice_connection(),
+        )
+
     async def cog_unload(self):
         self.logger.info("Unloading mumble cog...")
 
@@ -326,5 +335,3 @@ class Mumble(commands.Cog):
     @ping_loop.before_loop
     async def wait_until_ready(self):
         await self.bot.wait_until_ready()
-        # Must wait until the member cache is populated.
-        self.users = NotifyUsers(self.bot)
