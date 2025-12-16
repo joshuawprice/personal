@@ -168,8 +168,8 @@ class NotifyUsers:
 
 class Mumble(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
-        self.logger = logging.getLogger(__name__)
+        self.bot: commands.Bot = bot
+        self.logger: logging.Logger = logging.getLogger(__name__)
 
         self.server_host: str
         self.user_count: int
