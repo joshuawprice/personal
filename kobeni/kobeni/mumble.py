@@ -174,7 +174,7 @@ class Mumble(commands.Cog):
         self.server_host: str
         self.user_count: int
         self.users = None
-        self.last_iteration = datetime.now(timezone.utc) - timedelta(minutes=1.67)
+        self.notifications_last_sent_at: datetime = datetime.min
 
         voice_channel_id = os.getenv("MUMBLE_CHANNEL")
         if voice_channel_id is None:
@@ -296,7 +296,7 @@ class Mumble(commands.Cog):
     def _is_on_cooldown(self) -> bool:
         """Check if notification cooldown is active."""
         cooldown_period = timedelta(minutes=2)
-        time_since_last = datetime.now(timezone.utc) - self.last_iteration
+        time_since_last = datetime.now(timezone.utc) - self.notifications_last_sent_at
         return time_since_last <= cooldown_period
 
     async def _send_notification(self, user, msg):
@@ -329,7 +329,7 @@ class Mumble(commands.Cog):
             self._send_notifications_if_needed(last_user_count),
         )
 
-        self.last_iteration = datetime.now(timezone.utc)
+        self.notifications_last_sent_at = datetime.now(timezone.utc)
 
     # This runs even on loop.restart()
     @ping_loop.before_loop
