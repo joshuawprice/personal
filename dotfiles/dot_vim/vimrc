@@ -6,9 +6,29 @@ set number "set relativenumber
 set relativenumber "set relativenumber
 set ignorecase " ignore upper/lower case when searching
 
-" With the default colorscheme this looks much worse.
-" If I do end up using a different colorscheme in future,
-" this may need disabling.
-set notermguicolors
-
 autocmd FileType text setlocal textwidth=78
+
+if $USER == 'root'
+	" For some security.
+	set noloadplugins
+
+	let user_vim = expand('~' . $SUDO_USER . '/.vim')
+	if isdirectory(user_vim)
+		" root sources this vimrc, but can't find my custom theme without this.
+		execute 'set runtimepath+=' . user_vim
+	endif
+endif
+
+" Required for (any) theme's truecolor support.
+set termguicolors
+
+" In case the theme doesn't apply, lets still make vim readable.
+set background=dark
+
+colorscheme starlight
+" Other good colorschemes in decreasing order are:
+" - unokai
+" - slate
+" - sorbet
+" - evening
+" - wildcharm
