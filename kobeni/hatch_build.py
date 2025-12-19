@@ -17,7 +17,7 @@ class ProtocBuildHook(BuildHookInterface):
             print(f"Warning: Proto directory {src_dir} not found")
             return
 
-        proto_files = list(src_dir.glob("*.proto"))
+        proto_files = list(src_dir.rglob("*.proto"))
 
         if not proto_files:
             return
