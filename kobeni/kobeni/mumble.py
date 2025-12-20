@@ -174,7 +174,9 @@ class Mumble(commands.Cog):
         self.server_host: str
         self.user_count: int
         self.users = None
-        self.notifications_last_sent_at: datetime = datetime.min
+        self.notifications_last_sent_at: datetime = datetime.min.replace(
+            tzinfo=timezone.utc
+        )
 
         voice_channel_id = os.getenv("MUMBLE_CHANNEL")
         if voice_channel_id is None:
