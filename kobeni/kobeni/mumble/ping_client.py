@@ -1,8 +1,10 @@
 import asyncio
+from collections.abc import Callable, Awaitable
 import logging
 import socket
 import struct
 import time
+import traceback
 
 from google.protobuf.runtime_version import VersionError
 
@@ -116,12 +118,33 @@ async def _get_server_host():
 
 class PingClient:
     def __init__(self):
+        self.user_count: int
         self._server_host: str
+        self._ping_loop_task: asyncio.Task | None = None
+        self._callbacks: dict[str, set[Callable[[int, int], Awaitable]]] = {
+            "user_presence_changed": set()
+        }
 
-    async def load(self):
+    async def connect(self) -> None:
+        if self._ping_loop_task is not None and not self._ping_loop_task.done():
+            return
+
         self._server_host = await _get_server_host()
+        self.user_count = await self._fetch_user_count()
+        self._ping_loop_task = asyncio.create_task(self._ping_loop())
 
-    async def fetch_user_count(self) -> int | None:
+    async def disconnect(self) -> None:
+        if self._ping_loop_task is None:
+            return
+
+        try:
+            del self.user_count
+        except AttributeError:
+            pass
+
+        self._ping_loop_task.cancel()
+
+    async def _fetch_user_count(self) -> int | None:
         """Fetch current user count with timeout handling."""
         try:
             async with asyncio.timeout(1):
@@ -133,3 +156,40 @@ class PingClient:
             # much just normal behaviour.
             logger.debug("Mumble ping timed out")
             return None
+
+    async def _ping(self) -> None:
+        last_user_count = self.user_count
+        self.user_count = await self._fetch_user_count()
+
+        # Only perform callbacks if there's actually a change on the server.
+        if self.user_count is None or self.user_count == last_user_count:
+            return
+
+        results = await asyncio.gather(
+            *(
+                f(last_user_count, self.user_count)
+                for f in self._callbacks["user_presence_changed"]
+            ),
+            return_exceptions=True,
+        )
+
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                tb_str = "".join(
+                    traceback.format_exception(
+                        type(result), result, result.__traceback__
+                    )
+                )
+                logger.warning(f"Task {i} failed:\n{tb_str}")
+
+    async def _ping_loop(self) -> None:
+        while True:
+            logger.debug("Calling _ping()")
+            await self._ping()
+            # Was listening to 初恋のこたえ and this happened to be the bpm :)
+            await asyncio.sleep(0.3243243243243244)
+
+    def add_user_presence_changed_callback(
+        self, func: Callable[[int, int], Awaitable]
+    ) -> None:
+        self._callbacks["user_presence_changed"].add(func)
