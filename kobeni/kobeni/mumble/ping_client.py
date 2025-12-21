@@ -17,6 +17,8 @@ except VersionError as e:
     )
     raise e
 
+from .client import Client
+
 logger = logging.getLogger(__name__)
 
 # TODO:
@@ -116,7 +118,7 @@ async def _get_server_host():
     return "mumble.kruitana.com"
 
 
-class PingClient:
+class PingClient(Client):
     def __init__(self):
         self.user_count: int
         self._server_host: str
