@@ -21,6 +21,9 @@ except VersionError as e:
     )
     raise e
 
+logger: logging.Logger = logging.getLogger(__name__)
+
+
 # TODO:
 # - Mumble SRV record lookup
 # - Check return address matches sending address?
@@ -169,7 +172,6 @@ class NotifyUsers:
 class Mumble(commands.Cog):
     def __init__(self, bot):
         self.bot: commands.Bot = bot
-        self.logger: logging.Logger = logging.getLogger(__name__)
 
         self.server_host: str
         self.user_count: int
@@ -185,7 +187,7 @@ class Mumble(commands.Cog):
 
     async def cog_load(self):
         self.server_host = await _get_server_host()
-        self.logger.info("Setting mumble server_host to: " + self.server_host)
+        logger.info("Setting mumble server_host to: " + self.server_host)
 
         self.user_count = await self._fetch_current_user_count()
 
@@ -201,7 +203,7 @@ class Mumble(commands.Cog):
         )
 
     async def cog_unload(self):
-        self.logger.info("Unloading mumble cog...")
+        logger.info("Unloading mumble cog...")
 
         self.ping_loop.cancel()
         general_voice_channel = self.bot.get_channel(self.voice_channel_id)
@@ -243,13 +245,13 @@ class Mumble(commands.Cog):
         """Fetch current user count with timeout handling."""
         try:
             async with asyncio.timeout(1):
-                self.logger.debug(f'Calling fetch_user_count("{self.server_host}")')
+                logger.debug(f'Calling fetch_user_count("{self.server_host}")')
                 return await fetch_user_count(self.server_host)
         except TimeoutError:
             # I'm finding a somewhat substantial number of udp pings seem
             # to be getting dropped somewhere, so I guess this is pretty
             # much just normal behaviour.
-            self.logger.debug("Mumble ping timed out")
+            logger.debug("Mumble ping timed out")
             return None
 
     async def _update_channel_status(self) -> None:
@@ -257,7 +259,7 @@ class Mumble(commands.Cog):
         channel = self.bot.get_channel(self.voice_channel_id)
         pluralised_user_string = "user" if self.user_count == 1 else "users"
 
-        self.logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
+        logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
         await channel.edit(
             status=f"{self.user_count} {pluralised_user_string} on Mumble"
         )
@@ -269,10 +271,10 @@ class Mumble(commands.Cog):
         voice_client = guild.voice_client
 
         if self.user_count > 0 and voice_client is None:
-            self.logger.info(f"Connecting to {channel.name} in {guild.name}")
+            logger.info(f"Connecting to {channel.name} in {guild.name}")
             await channel.connect(self_mute=True, self_deaf=True)
         elif self.user_count == 0 and voice_client is not None:
-            self.logger.info(f"Disconnecting from {channel.name} in {guild.name}")
+            logger.info(f"Disconnecting from {channel.name} in {guild.name}")
             await voice_client.disconnect()
 
     async def _send_notifications_if_needed(self, last_user_count: int) -> None:
@@ -281,10 +283,10 @@ class Mumble(commands.Cog):
             return
 
         if self._is_on_cooldown():
-            self.logger.info("Not pinging due to cooldown.")
+            logger.info("Not pinging due to cooldown.")
             return
 
-        self.logger.info("Pinging users for Mumble")
+        logger.info("Pinging users for Mumble")
         msg = "Mumble just became active!"
         results = await asyncio.gather(
             *[self._send_notification(user, msg) for user in self.users],
@@ -293,7 +295,7 @@ class Mumble(commands.Cog):
 
         for user, result in zip(self.users, results):
             if isinstance(result, Exception):
-                self.logger.warning(f"Failed to notify {user}: {result}")
+                logger.warning(f"Failed to notify {user}: {result}")
 
     def _is_on_cooldown(self) -> bool:
         """Check if notification cooldown is active."""
@@ -309,12 +311,12 @@ class Mumble(commands.Cog):
     # Was listening to 初恋のこたえ and this happened to be the bpm :)
     @tasks.loop(seconds=0.3243243243243244)
     async def ping_loop(self):
-        self.logger.debug("Entering ping_loop()")
+        logger.debug("Entering ping_loop()")
 
         # If the loop gets behind, it will try to catchup all delayed runs.
         # This just prevents it doing that and spamming the server.
         if self._is_ping_loop_behind():
-            self.logger.debug("Restarting ping_loop() task")
+            logger.debug("Restarting ping_loop() task")
             self.ping_loop.restart()
             return
 
