@@ -357,6 +357,7 @@ dependencies = [
     { name = "protobuf" },
     { name = "pynacl" },
     { name = "python-dotenv" },
+    { name = "zeroc-ice" },
 ]
 
 [package.metadata]
@@ -366,6 +367,7 @@ requires-dist = [
     { name = "protobuf", specifier = "~=6.33" },
     { name = "pynacl", specifier = "~=1.6" },
     { name = "python-dotenv", specifier = "~=1.2" },
+    { name = "zeroc-ice", specifier = "~=3.8.0,<3.9" },
 ]
 
 [[package]]
@@ -670,4 +672,16 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/19/3774d162f6732d1cfb0b47b4140a942a35ca82bb19b6db1f80e9e7bdc8f8/yarl-1.23.0-cp314-cp314t-win_amd64.whl", hash = "sha256:4503053d296bc6e4cbd1fad61cf3b6e33b939886c4f249ba7c78b602214fabe2", size = 97610, upload-time = "2026-03-01T22:07:45.773Z" },
     { url = "https://files.pythonhosted.org/packages/51/47/3fa2286c3cb162c71cdb34c4224d5745a1ceceb391b2bd9b19b668a8d724/yarl-1.23.0-cp314-cp314t-win_arm64.whl", hash = "sha256:44bb7bef4ea409384e3f8bc36c063d77ea1b8d4a5b2706956c0d6695f07dcc25", size = 86041, upload-time = "2026-03-01T22:07:49.026Z" },
     { url = "https://files.pythonhosted.org/packages/69/68/c8739671f5699c7dc470580a4f821ef37c32c4cb0b047ce223a7f115757f/yarl-1.23.0-py3-none-any.whl", hash = "sha256:a2df6afe50dea8ae15fa34c9f824a3ee958d785fd5d089063d960bae1daa0a3f", size = 48288, upload-time = "2026-03-01T22:07:51.388Z" },
+]
+
+[[package]]
+name = "zeroc-ice"
+version = "3.8.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/fa/3868c5946cdd4123667cf286f2cb1097809f54f13a9d71a810e6136fb20e/zeroc_ice-3.8.0.tar.gz", hash = "sha256:40de2fbac4259411203e9dbff0cdb55fc368fdadf19459ff89f1f0c54dabd81e", size = 1048042, upload-time = "2025-12-16T19:03:59.381Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/65/4d/05e9b5fae3cf13d49d3190a57af87f14b7189490ed51ec8aac992e05140d/zeroc_ice-3.8.0-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:24306ea5ee6367431979060113433713af9c82ed16138e3c21d0d51aa1813a9e", size = 4506720, upload-time = "2025-12-16T19:03:51.962Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/a5/9d4db108bc4f0124a4a6812be9d18d25371e4c8c6ab19a82ddc69de4baa3/zeroc_ice-3.8.0-cp313-cp313-win_amd64.whl", hash = "sha256:6895cbceafa0d5961c5fa1240cdcd6e7b6c8a942943e099177b9c39d3be8e0d6", size = 23129604, upload-time = "2025-12-16T19:03:53.599Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/39/de7467f62c870de09f2ebba09e60a37de8f9eda52c33b7f6d8c7c004ad17/zeroc_ice-3.8.0-cp314-cp314-macosx_10_15_universal2.whl", hash = "sha256:389cb067e8c7e45c02c1ae0ab883d8d54a9957bcbe5e93d868f6b92b27748dd6", size = 4507237, upload-time = "2025-12-16T19:03:55.919Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/6e/2aadcd1b14de883d3aa4c90e60067325d2da8d37a359c1f585a6cd4fc2d8/zeroc_ice-3.8.0-cp314-cp314-win_amd64.whl", hash = "sha256:619f71e9d3c7ae0e5b14c008dcc81c08b9d59d31723e36e77c1960ceea1611b7", size = 23451967, upload-time = "2025-12-16T19:03:57.488Z" },
 ]
