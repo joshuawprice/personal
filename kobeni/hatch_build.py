@@ -6,6 +6,29 @@ import google.protobuf
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 
+def build_ice(version, build_data):
+    try:
+        subprocess.run(
+            [
+                "slice2py",
+                "--output-dir",
+                "kobeni/mumble",
+                "kobeni/mumble/MumbleServer.ice",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except FileNotFoundError:
+        print("slice2py not found in PATH")
+        sys.exit(1)
+    except subprocess.CalledProcessError as e:
+        print(f"Error compiling MumbleServer.ice: {e}")
+        print(f"stdout: {e.stdout}")
+        print(f"stderr: {e.stderr}")
+        sys.exit(1)
+
+
 class ProtocBuildHook(BuildHookInterface):
     PLUGIN_NAME = "protoc"
 
@@ -67,3 +90,5 @@ class ProtocBuildHook(BuildHookInterface):
                 print(f"stdout: {e.stdout}")
                 print(f"stderr: {e.stderr}")
                 sys.exit(1)
+
+        build_ice(version, build_data)

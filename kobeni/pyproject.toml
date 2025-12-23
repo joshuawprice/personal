@@ -19,6 +19,7 @@ dependencies = [
 requires = [
     "hatchling~=1.27",
     "protobuf~=6.33",
+    "zeroc-ice"
 ]
 build-backend = "hatchling.build"
 

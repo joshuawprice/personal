@@ -1,4 +1,4 @@
-FROM python:3.13-slim-trixie AS builder
+FROM python:3.13-trixie AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
