@@ -17,3 +17,5 @@ MumbleUDP_pb2.py
 
 # The runtime data folder
 config
+
+kobeni/mumble/MumbleServer

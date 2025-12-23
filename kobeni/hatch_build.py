@@ -28,6 +28,10 @@ def build_ice(version, build_data):
         print(f"stderr: {e.stderr}")
         sys.exit(1)
 
+    # Hatch ignores files listed in .gitignore, so we need to tell it
+    # about our build artifacts explicitly.
+    build_data["artifacts"].append("kobeni/mumble/MumbleServer")
+
 
 class ProtocBuildHook(BuildHookInterface):
     PLUGIN_NAME = "protoc"
