@@ -31,6 +31,7 @@ RUN groupadd --system --gid 1000 nonroot \
 COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH=".venv/lib/python3.13/site-packages/kobeni/mumble"
 
 USER nonroot
 
