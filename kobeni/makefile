@@ -3,6 +3,11 @@
 # continue developing properly on my host.
 #
 # See also: Dockerfile.venv and make-venv.sh
+.PHONY: run
+run:
+	docker build -t kobeni .
+	docker run --env-file=.env --network=host kobeni
+
 .PHONY: venv
 venv:
 	docker build -t kobeni-dev -f Dockerfile.venv .
