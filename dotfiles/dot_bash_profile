@@ -17,9 +17,6 @@ export PATH=/home/josh/.local/bin:"$PATH"
 # Add ~/.local/user-scripts to path
 export PATH=/home/josh/.local/user-scripts:"$PATH"
 
-# Use wayland on firefox if available
-export MOZ_ENABLE_WAYLAND=1
-
 # Define XDG environment variables
 export XDG_CONFIG_HOME="$HOME"/.config
 export XDG_CACHE_HOME="$HOME"/.cache
