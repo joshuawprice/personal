@@ -1,7 +1,6 @@
-if status is-interactive
+if status is-login
     and [ -z $WAYLAND_DISPLAY ]
-    and set -q XDG_VTNR
-    and [ $XDG_VTNR -ge 3 ]
+    and set -q XDG_VTNR; and [ $XDG_VTNR -ge 3 ]
 
     if ! command -v cage >/dev/null
         echo "`cage' not installed, falling back to tty." >&2
