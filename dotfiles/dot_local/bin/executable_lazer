@@ -15,7 +15,6 @@ deleteOldAppImages() {
 
 # Move into folder with appimages.
 cd "$HOME/.local/bin/"
-# cd "${0%/*}/"
 
 # Find all osu app images in the specified directory
 files=( osu*.AppImage )
@@ -48,24 +47,30 @@ esac
 
 # Set environment variables to make osu run better.
 
-# If running a wayland session start sdl2 with wayland backend.
 if [[ $XDG_SESSION_TYPE = wayland ]]; then
-  export SDL_VIDEODRIVER=wayland
+    # Works on both SDL2 and 3 due to backwards compatability.
+    export SDL_VIDEODRIVER=wayland
+    # This is the SDL3 version. Once lazer moves to SDL3, this will be in the only one kept.
+    export SDL_VIDEO_DRIVER=wayland
 fi
 
 # Enable D-GPU on Muspelheim
 if [[ "$(hostnamectl hostname)" == "muspelheim" ]]; then
-  :
-  export DRI_PRIME=1
+    export DRI_PRIME=1
 fi
 
 # Reduce pipewire latency.
-export PIPEWIRE_ALSA='{ node.force-quantum=64 alsa.buffer-bytes=1024 alsa.period-bytes=64 }'
-# Maybe setting both is nonsensical..?
-#export PIPEWIRE_LATENCY=64/48000
-#export PIPEWIRE_ALSA='{ alsa.buffer-bytes=1024 alsa.period-bytes=64 }'
+export PIPEWIRE_ALSA='{ alsa.period-bytes=512 alsa.periods=2 }'
+
+export OSU_SDL3=1
+
+# If using tearing, this should decrease latency, according to The Poon's discord server.
+export SDL_VIDEO_DOUBLE_BUFFER=1
 
 chmod u+x "$newest_file"
+
+# In theory this should only do anything on Windows...
+export OSU_AUDIO_WASAPI_EXPERIMENTAL=1
 
 #gamescope -w 2560 -h 1440 ./osu*.AppImage "$@"
 #gamemoderun gamescope -w 2560 -h 1600 -r 165 ./osu*.AppImage "$@"
