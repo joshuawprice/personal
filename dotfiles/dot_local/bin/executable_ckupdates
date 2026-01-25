@@ -1,29 +1,82 @@
-#!/bin/bash
+#!/bin/sh
+
+# Exit codes:
+#   1: missing dependencies
+#   2: internet failure
+#   3: both repo and aur listing programs failed
+#   4: partial success; either repo or aur listing program failed
 
 # saner programming env: these switches turn some bugs into errors
-set -o errexit -o pipefail -o noclobber -o nounset
+# dash doesn't support pipefail
+set -o errexit -o noclobber -o nounset
 
-if ! sudo ping -c 1 -W 2 archlinux.org >/dev/null; then
-    echo "Failed to check for updates - internet check failed." >&2
+network_check() {
+    set +o errexit
+    ping -c 1 -W 2 "$1" >/dev/null
+    set -o errexit
+}
+
+if ! command -v checkupdates >/dev/null; then
+    echo "${0##*/}: \`checkupdates\` not found" >&2
     exit 1
 fi
 
-#if command -v checkupdates >/dev/null; then
-#    echo "\`checkupdates\` is not installed" >&2
-#fi
+if ! network_check asgard.jprice.uk \
+    && ! network_check archlinux.org; then
+    echo "${0##*/}: cannot reach internet" >&2
+    exit 2
+fi
 
-if [[ "$@" == "-d" ]]; then
-    checkupdates -d 
+# Support downloading repo packages with the -d flag.
+if [ $# -ge 1 ]; then
+    checkupdates "$@"
     exit 0
 fi
 
+# Retrieve list of updates.
 echo "Checking for updates..." >&2
-updates="$(checkupdates && paru -Qua | grep -v '\[ignored\]' || :)"
+repo_updates="$(checkupdates)" || checkupdates_exit_code=$?
 
-if [[ -z $updates ]]; then
-    echo "No updates found." >&2
+if command -v paru >/dev/null; then
+    aur_updates="$(paru --query --upgrades --aur --color=always)" || paru_exit_code=$?
+    # If aur_updates is empty grep will fail. Just ignore it.
+    aur_updates="$(printf "$aur_updates" | grep --invert-match '\[ignored\]' || :)"
+else
+    echo "\`paru\` not found, any aur updates cannot be listed" >&2
+    aur_updates=""
+fi
+
+# Deal with unpredicted failures.
+if [ -n "${checkupdates_exit_code:-}" ] && [ -n "${paru_exit_code:-}" ]; then
+    echo "${0##*/}: both \`checkupdates\` and \`paru\` unexpectedly failed" >&2
+    echo "${0##*/}: \`checkupdates\` exited with code: $checkupdates_exit_code" >&2
+    echo "${0##*/}: \`paru\` exited with code: $paru_exit_code" >&2
+    exit 3
+elif [ -n "${checkupdates_exit_code:-}" ]; then
+    echo "${0##*/}: \`checkupdates\` unexpectedly failed with code: $checkupdates_exit_code" >&2
+    echo "${0##*/}: only showing aur updates" >&2
+elif [ -n "${paru_exit_code:-}" ]; then
+    echo "${0##*/}: \`paru\` unexpectedly failed with code: $paru_exit_code" >&2
+    echo "${0##*/}: only showing repo updates" >&2
+fi
+
+# Correctly concat repo and aur updates.
+if [ -n "$repo_updates" ] && [ -n "$aur_updates" ]; then
+    updates="$repo_updates
+$aur_updates"
+else
+    updates="$repo_updates$aur_updates"
+fi
+
+# Finally, print any updates.
+if [ -z "$updates" ]; then
+    echo "No updates. You're up to date!" >&2
 else
     echo "$updates"
 fi
 
-# vim: shiftwidth=4 sts=4 expandtab
+if [ -n "${checkupdates_exit_code:-}" ] || [ -n "${paru_exit_code:-}" ]; then
+    exit 4
+fi
+
+# vim: sw=4 sts=4 et
