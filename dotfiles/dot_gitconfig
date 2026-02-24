@@ -5,8 +5,6 @@
 	signingkey = ABAD30AAE0AD89D1
 [credential]
 	helper = cache --timeout=86400
-[commit]
-	gpgsign = true
 [init]
 	defaultBranch = main
 [pull]
