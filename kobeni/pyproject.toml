@@ -5,6 +5,7 @@ description = "Basic discord bot"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "davey>=0.1.4",
     "discord-py~=2.6",
     "protobuf~=6.33",
     "pynacl~=1.6",
