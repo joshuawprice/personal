@@ -4,6 +4,11 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5.0"
+    }
   }
   backend "s3" {
     bucket       = "personal-prod-tofu-state"
@@ -73,7 +78,7 @@ resource "aws_instance" "asgard" {
   root_block_device {
     delete_on_termination = false
     encrypted             = true
-    volume_size           = 15
+    volume_size           = 8
   }
 
   ami      = data.aws_ssm_parameter.debian_13_arm_ami.insecure_value
@@ -143,10 +148,56 @@ resource "aws_security_group" "asgard" {
   }
 
   ingress {
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
     from_port        = 443
     to_port          = 443
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    from_port        = 51820
+    to_port          = 51820
+    protocol         = "udp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    from_port        = 64738
+    to_port          = 64738
+    protocol         = "udp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    from_port        = 64738
+    to_port          = 64738
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  # Allow all ICMP for pings and other.
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port        = -1
+    to_port          = -1
+    protocol         = "icmpv6"
     ipv6_cidr_blocks = ["::/0"]
   }
 
@@ -157,4 +208,52 @@ resource "aws_security_group" "asgard" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
+}
+
+resource "aws_eip" "asgard" {
+  instance = aws_instance.asgard.id
+  #domain   = "vpc"
+}
+
+resource "cloudflare_dns_record" "asgard" {
+  zone_id = "d4559b15079141dd3ce0f9332a07c571"
+  name    = "asgard.jprice.uk"
+  ttl     = 1
+  type    = "A"
+  content = aws_instance.asgard.public_ip
+  proxied = false
+}
+
+resource "cloudflare_dns_record" "asgard_ipv6" {
+  count   = aws_instance.asgard.ipv6_address_count
+  zone_id = "d4559b15079141dd3ce0f9332a07c571"
+  name    = "asgard.jprice.uk"
+  ttl     = 1
+  type    = "AAAA"
+  content = aws_instance.asgard.ipv6_addresses[count.index]
+  proxied = false
+}
+
+resource "cloudflare_dns_record" "jf_jprice_uk" {
+  zone_id = "d4559b15079141dd3ce0f9332a07c571"
+  name    = "jf.jprice.uk"
+  ttl     = 1
+  type    = "CNAME"
+  content = cloudflare_dns_record.asgard.name
+  proxied = false
+}
+
+resource "cloudflare_dns_record" "tr_jprice_uk" {
+  zone_id = "d4559b15079141dd3ce0f9332a07c571"
+  name    = "tr.jprice.uk"
+  ttl     = 1
+  type    = "CNAME"
+  content = cloudflare_dns_record.asgard.name
+  proxied = false
+}
+
+module "private" {
+  source = "../private-personal"
+
+  asgard = aws_instance.asgard
 }
