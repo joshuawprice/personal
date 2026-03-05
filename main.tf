@@ -56,11 +56,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "tofu_states" {
 }
 
 # Asgard
-# Add ebs disk and disk backups
-
-# TODO: Update ssh keys
-# Security groups eventually
-# IPv6
 resource "aws_key_pair" "muspelheim" {
   key_name   = "muspelheim"
   public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDxwpe+zdeTEZlfaUlOOoEk5Rqn7USOhXZA3X4YRozm1 josh@muspelheim"
@@ -83,6 +78,10 @@ resource "aws_instance" "asgard" {
 
   ami      = data.aws_ssm_parameter.debian_13_arm_ami.insecure_value
   key_name = aws_key_pair.muspelheim.key_name
+
+  tags = {
+    Name = "asgard"
+  }
 }
 
 #resource "aws_ec2_instance_state" "stop_asgard" {
@@ -90,6 +89,54 @@ resource "aws_instance" "asgard" {
 #  state       = "stopped"
 #  #state       = "running"
 #}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["dlm.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "dlm_lifecycle_role" {
+  name               = "dlm-lifecycle-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "dlm_managed_policy" {
+  role       = aws_iam_role.dlm_lifecycle_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSDataLifecycleManagerServiceRole"
+}
+
+resource "aws_dlm_lifecycle_policy" "asgard" {
+  description        = "Asgard backups"
+  execution_role_arn = aws_iam_role.dlm_lifecycle_role.arn
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = "1 month of twice-weekly snapshots"
+
+      create_rule {
+        cron_expression = "cron(0 6 ? * MON,SAT *)"
+      }
+
+      retain_rule {
+        count = 8
+      }
+    }
+
+    target_tags = {
+      Name = "asgard"
+    }
+  }
+}
 
 data "aws_availability_zones" "available" {
   state = "available"
