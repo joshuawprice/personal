@@ -1,0 +1,3 @@
+variable "asgard" {
+  #type = string
+}
