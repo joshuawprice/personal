@@ -74,6 +74,9 @@ resource "aws_instance" "asgard" {
     delete_on_termination = false
     encrypted             = true
     volume_size           = 8
+    tags = {
+      Name = "asgard"
+    }
   }
 
   ami      = data.aws_ssm_parameter.debian_13_arm_ami.insecure_value
