@@ -272,4 +272,5 @@ module "private" {
   source = "../private-personal"
 
   asgard = aws_instance.asgard
+  nidavellir_ip_addr = module.dns.nidavellir_ip_addr
 }
