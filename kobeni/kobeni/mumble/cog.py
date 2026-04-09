@@ -8,7 +8,8 @@ import os
 import discord
 from discord.ext import commands
 
-from .ping_client import PingClient
+from .rpc_client import RpcClient
+from .client import Client
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ class Mumble(commands.Cog):
     def __init__(self, bot):
         self.bot: commands.Bot = bot
 
-        self.mumble_client: PingClient = PingClient()
+        self.mumble_client: Client = RpcClient()
 
         for name in dir(self):
             method = getattr(self, name)
