@@ -14,7 +14,8 @@ dev: build
 # only on debian 13. Therefore, create the venv in there so that I can
 # continue developing properly on my host.
 #
-# See also: Dockerfile.venv and make-venv.sh
+# Ice has been upgraded to fix this at the time of writing, but may break again
+# in future, so keep this around.
 .PHONY: venv
 venv:
 	docker build -t kobeni-dev -f Dockerfile.venv .

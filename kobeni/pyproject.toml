@@ -5,9 +5,9 @@ description = "Basic discord bot"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "davey>=0.1.4",
+    "davey~=0.1.5",
     "discord-py~=2.6",
-    "protobuf~=6.33",
+    "protobuf~=7.34",
     "pynacl~=1.6",
     "python-dotenv~=1.2",
     # Ice guarantees source code compatibility for most recent version, and
@@ -18,8 +18,8 @@ dependencies = [
 [build-system]
 requires = [
     "hatchling~=1.27",
-    "protobuf~=6.33",
-    "zeroc-ice"
+    "protobuf~=7.34",
+    "zeroc-ice~=3.8.0,<3.9",
 ]
 build-backend = "hatchling.build"
 
