@@ -10,12 +10,16 @@ dependencies = [
     "protobuf~=6.33",
     "pynacl~=1.6",
     "python-dotenv~=1.2",
+    # Ice guarantees source code compatibility for most recent version, and
+    # 3.8 is already newer than the MumbleServer.ice as of time of writing.
+    "zeroc-ice~=3.8.0,<3.9",
 ]
 
 [build-system]
 requires = [
     "hatchling~=1.27",
     "protobuf~=6.33",
+    "zeroc-ice"
 ]
 build-backend = "hatchling.build"
 

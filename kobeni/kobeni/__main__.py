@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from . import mumble
+from .mumble import Mumble
 
 
 class Bot(commands.Bot):
@@ -17,7 +17,7 @@ class Bot(commands.Bot):
         super().__init__(*args, **kwargs)
 
     async def setup_hook(self):
-        await self.add_cog(mumble.Mumble(self))
+        await self.add_cog(Mumble(self))
 
     async def close(self):
         self.logger.info("Shutting down bot...")

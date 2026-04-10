@@ -1,0 +1,31 @@
+services:
+  mumble-server:
+    image: mumblevoip/mumble-server:latest
+    container_name: mumble-server
+    hostname: mumble-server
+    ports:
+      - 64738:64738
+      - 64738:64738/udp
+      #- '127.0.0.1:6502:6502'
+      #- '6502:6502' # Ice
+      #- '10.0.0.1:6502:6502' # Ice
+      #- 'fd1a:85b:ce40::1:6502:6502' # Ice
+    volumes:
+      - ./mumble:/data
+    environment:
+      - MUMBLE_CONFIG_ice="tcp -h 0.0.0.0 -p 6502" # Necessary?
+    networks:
+      - mumble
+  kobeni:
+    image: kobeni
+    container_name: kobeni
+    env_file: .env
+    volumes:
+      - ./kobeni-data:/app/config
+    networks:
+      - mumble
+
+networks:
+  mumble:
+
+# vim: sts=2 sw=2 et
