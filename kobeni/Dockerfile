@@ -2,7 +2,9 @@ FROM python:3.13-trixie AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN apt-get update && apt-get install -y protobuf-compiler
+RUN apt-get update \
+  && apt-get install -y protobuf-compiler \
+  && rm -rf /var/lib/apt/lists/*
 
 ENV UV_COMPILE_BYTECODE=1
 
