@@ -76,9 +76,7 @@ class Mumble(commands.Cog):
                 self.mumble_client.add_user_presence_changed_callback(method)
 
         self.users = None
-        self.notifications_last_sent_at: datetime = datetime.min.replace(
-            tzinfo=timezone.utc
-        )
+        self.empty_since: datetime = datetime.min.replace(tzinfo=timezone.utc)
 
         voice_channel_id = os.getenv("MUMBLE_CHANNEL")
         if voice_channel_id is None:
@@ -168,7 +166,6 @@ class Mumble(commands.Cog):
     ) -> None:
         """Send notifications when Mumble becomes active after cooldown."""
         if not (last_user_count == 0 and user_count > 0):
-            self.notifications_last_sent_at = datetime.now(timezone.utc)
             return
 
         if self._is_on_cooldown():
@@ -186,13 +183,17 @@ class Mumble(commands.Cog):
             if isinstance(result, Exception):
                 logger.warning(f"Failed to notify {user}: {result}")
 
-        self.notifications_last_sent_at = datetime.now(timezone.utc)
+    @on_mumble_user_presence_changed
+    async def _set_empty_since(self, last_user_count: int, user_count: int) -> None:
+        """Saves when last user disconnects from mumble server"""
+        if last_user_count > 0 and user_count == 0:
+            self.empty_since = datetime.now(timezone.utc)
 
     def _is_on_cooldown(self) -> bool:
         """Check if notification cooldown is active."""
         cooldown_period = timedelta(minutes=2)
-        time_since_last = datetime.now(timezone.utc) - self.notifications_last_sent_at
-        return time_since_last <= cooldown_period
+        time_since_empty = datetime.now(timezone.utc) - self.empty_since
+        return time_since_empty <= cooldown_period
 
     async def _send_notification(self, user, msg):
         """Helper method to send DM notification."""
