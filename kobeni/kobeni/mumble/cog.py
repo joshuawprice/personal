@@ -1,9 +1,9 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
 import json
 import logging
 from pathlib import Path
 import os
+import time
 
 import discord
 from discord.ext import commands
@@ -76,7 +76,7 @@ class Mumble(commands.Cog):
                 self.mumble_client.add_user_presence_changed_callback(method)
 
         self.users = None
-        self.empty_since: datetime = datetime.min.replace(tzinfo=timezone.utc)
+        self.empty_since: float | None = None
 
         voice_channel_id = os.getenv("MUMBLE_CHANNEL")
         if voice_channel_id is None:
@@ -187,12 +187,15 @@ class Mumble(commands.Cog):
     async def _set_empty_since(self, last_user_count: int, user_count: int) -> None:
         """Saves when last user disconnects from mumble server"""
         if last_user_count > 0 and user_count == 0:
-            self.empty_since = datetime.now(timezone.utc)
+            self.empty_since = time.monotonic()
 
     def _is_on_cooldown(self) -> bool:
         """Check if notification cooldown is active."""
-        cooldown_period = timedelta(minutes=2)
-        time_since_empty = datetime.now(timezone.utc) - self.empty_since
+        if self.empty_since is None:
+            return False
+
+        cooldown_period = 120
+        time_since_empty = time.monotonic() - self.empty_since
         return time_since_empty <= cooldown_period
 
     async def _send_notification(self, user, msg):
