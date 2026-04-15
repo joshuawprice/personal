@@ -110,11 +110,3 @@ class RpcClient(Client):
                     )
                 )
                 logger.warning(f"Task {i} failed:\n{tb_str}")
-
-
-async def main():
-    async with Ice.Communicator(eventLoop=asyncio.get_event_loop()) as comm:
-        meta = MumbleServer.MetaPrx(
-            comm,
-        )
-        meta.getAllServer()  # Async?
