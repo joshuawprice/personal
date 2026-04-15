@@ -78,9 +78,9 @@ class Mumble(commands.Cog):
         self.users = None
         self.empty_since: float | None = None
 
-        voice_channel_id = os.getenv("MUMBLE_CHANNEL")
+        voice_channel_id = os.getenv("DISCORD_CHANNEL_ID")
         if voice_channel_id is None:
-            raise ValueError("Missing MUMBLE_CHANNEL env var.")
+            raise ValueError("Missing DISCORD_CHANNEL_ID env var.")
         self.voice_channel_id = int(voice_channel_id)
 
     @commands.Cog.listener()

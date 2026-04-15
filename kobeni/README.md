@@ -1,9 +1,11 @@
 # Kobeni
 
-Kobeni is a Python Discord bot, with the primary goal of bridging mumble and discord.
+Kobeni is a Python Discord bot, with the primary goal of bridging mumble and
+discord.
 
 ## Environment variables
 
 - TOKEN - Discord bot static token.
-- MUMBLE_CHANNEL - The ID of the discord voice channel to connect to.
+- DISCORD_CHANNEL_ID - ID of the voice channel to reflect the mumble server's
+  status.
 - PREFIX - Chat command prefix.
