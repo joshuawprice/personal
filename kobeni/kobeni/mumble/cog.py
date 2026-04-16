@@ -108,6 +108,7 @@ class Mumble(commands.Cog):
             before.channel.id == self.voice_channel_id
             and len(before.channel.members) == 0
         ):
+            logger.info("Resetting discord channel status as last user has left")
             await self._update_channel_status(0, self.mumble_client.user_count)
 
     @commands.command()
