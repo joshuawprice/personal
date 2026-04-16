@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 
 from .rpc_client import RpcClient
-from .client import Client
+from . import client
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -66,14 +66,9 @@ class Mumble(commands.Cog):
     def __init__(self, bot):
         self.bot: commands.Bot = bot
 
-        self.mumble_client: Client = RpcClient()
+        self.mumble_client: client.Client = RpcClient()
 
-        for name in dir(self):
-            method = getattr(self, name)
-            if callable(method) and getattr(
-                method, "_mumble_client_on_user_presence_changed", False
-            ):
-                self.mumble_client.add_user_presence_changed_callback(method)
+        self.mumble_client.register_callbacks(self)
 
         self.users = None
         self.empty_since: float | None = None
@@ -129,11 +124,8 @@ class Mumble(commands.Cog):
             self.users.append(user)
             await ctx.message.add_reaction("🔔")
 
-    def on_mumble_user_presence_changed(f):
-        f._mumble_client_on_user_presence_changed = True
-        return f
-
-    @on_mumble_user_presence_changed
+    @client.on_user_connect
+    @client.on_user_disconnect
     async def _update_channel_status(
         self, last_user_count: int, user_count: int
     ) -> None:
@@ -144,7 +136,8 @@ class Mumble(commands.Cog):
         logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
         await channel.edit(status=f"{user_count} {pluralised_user_string} on Mumble")
 
-    @on_mumble_user_presence_changed
+    @client.on_user_connect
+    @client.on_user_disconnect
     async def _manage_voice_connection(
         self, last_user_count: int, user_count: int
     ) -> None:
@@ -160,7 +153,8 @@ class Mumble(commands.Cog):
             logger.info(f"Disconnecting from {channel.name} in {guild.name}")
             await voice_client.disconnect()
 
-    @on_mumble_user_presence_changed
+    @client.on_user_connect
+    @client.on_user_disconnect
     async def _send_notifications_if_needed(
         self, last_user_count: int, user_count: int
     ) -> None:
@@ -183,7 +177,8 @@ class Mumble(commands.Cog):
             if isinstance(result, Exception):
                 logger.warning(f"Failed to notify {user}: {result}")
 
-    @on_mumble_user_presence_changed
+    @client.on_user_connect
+    @client.on_user_disconnect
     async def _set_empty_since(self, last_user_count: int, user_count: int) -> None:
         """Saves when last user disconnects from mumble server"""
         if last_user_count > 0 and user_count == 0:

@@ -16,10 +16,10 @@ class ServerCallback(MumbleServer.ServerCallback):
         self.rpc_client = rpc_client
 
     async def userConnected(self, state, current):
-        await self.rpc_client.on_change()
+        await self.rpc_client.on_user_connect()
 
     async def userDisconnected(self, state, current):
-        await self.rpc_client.on_change()
+        await self.rpc_client.on_user_disconnect()
 
     async def channelCreated(self, state, current):
         pass
@@ -42,7 +42,8 @@ class RpcClient(Client):
         self.ice_communicator: Ice.Communicator | None
         self.server: MumbleServer.ServerPrx
         self._callbacks: dict[str, set[Callable[[int, int], Awaitable]]] = {
-            "user_presence_changed": set()
+            "on_user_connect": set(),
+            "on_user_disconnect": set(),
         }
         self.user_count: int = 0
 
@@ -85,19 +86,43 @@ class RpcClient(Client):
         await self.ice_communicator.destroyAsync()
         self.ice_communicator = None
 
-    def add_user_presence_changed_callback(
+    def add_user_connect_callback(self, func: Callable[[int, int], Awaitable]) -> None:
+        self._callbacks["on_user_connect"].add(func)
+
+    def add_user_disconnect_callback(
         self, func: Callable[[int, int], Awaitable]
     ) -> None:
-        self._callbacks["user_presence_changed"].add(func)
+        self._callbacks["on_user_disconnect"].add(func)
 
-    async def on_change(self):
+    async def on_user_connect(self):
         last_user_count = self.user_count
-        self.user_count = len(await self.server.getUsersAsync())
+        self.user_count += 1
 
         results = await asyncio.gather(
             *(
                 f(last_user_count, self.user_count)
-                for f in self._callbacks["user_presence_changed"]
+                for f in self._callbacks["on_user_connect"]
+            ),
+            return_exceptions=True,
+        )
+
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                tb_str = "".join(
+                    traceback.format_exception(
+                        type(result), result, result.__traceback__
+                    )
+                )
+                logger.warning(f"Task {i} failed:\n{tb_str}")
+
+    async def on_user_disconnect(self):
+        last_user_count = self.user_count
+        self.user_count -= 1
+
+        results = await asyncio.gather(
+            *(
+                f(last_user_count, self.user_count)
+                for f in self._callbacks["on_user_disconnect"]
             ),
             return_exceptions=True,
         )
