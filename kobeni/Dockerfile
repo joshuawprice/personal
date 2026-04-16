@@ -1,4 +1,4 @@
-FROM python:3.13-trixie AS builder
+FROM python:3.14-trixie AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-editable
 
 
-FROM python:3.13-slim-trixie
+FROM python:3.14-slim-trixie
 
 RUN groupadd --system --gid 1000 nonroot \
     && useradd --system --gid 1000 --uid 1000 --create-home nonroot
@@ -33,7 +33,7 @@ RUN groupadd --system --gid 1000 nonroot \
 COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONPATH=".venv/lib/python3.13/site-packages/kobeni/mumble"
+ENV PYTHONPATH=".venv/lib/python3.14/site-packages/kobeni/mumble"
 
 USER nonroot
 

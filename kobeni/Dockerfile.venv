@@ -1,6 +1,6 @@
 # For an explanation of why this exists, see the makefile.
 
-FROM python:3.13-trixie AS builder
+FROM python:3.14-trixie AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
