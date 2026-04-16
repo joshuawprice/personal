@@ -124,7 +124,8 @@ class PingClient(Client):
         self._server_host: str
         self._ping_loop_task: asyncio.Task | None = None
         self._callbacks: dict[str, set[Callable[[int, int], Awaitable]]] = {
-            "user_presence_changed": set()
+            "on_user_connect": set(),
+            "on_user_disconnect": set(),
         }
 
     async def connect(self) -> None:
@@ -167,11 +168,13 @@ class PingClient(Client):
         if self.user_count is None or self.user_count == last_user_count:
             return
 
+        if self.user_count > last_user_count:
+            event = "on_user_connect"
+        else:
+            event = "on_user_disconnect"
+
         results = await asyncio.gather(
-            *(
-                f(last_user_count, self.user_count)
-                for f in self._callbacks["user_presence_changed"]
-            ),
+            *(f(last_user_count, self.user_count) for f in self._callbacks[event]),
             return_exceptions=True,
         )
 
@@ -191,7 +194,10 @@ class PingClient(Client):
             # Was listening to 初恋のこたえ and this happened to be the bpm :)
             await asyncio.sleep(0.3243243243243244)
 
-    def add_user_presence_changed_callback(
+    def add_user_connect_callback(self, func: Callable[[int, int], Awaitable]) -> None:
+        self._callbacks["on_user_connect"].add(func)
+
+    def add_user_disconnect_callback(
         self, func: Callable[[int, int], Awaitable]
     ) -> None:
-        self._callbacks["user_presence_changed"].add(func)
+        self._callbacks["on_user_disconnect"].add(func)
