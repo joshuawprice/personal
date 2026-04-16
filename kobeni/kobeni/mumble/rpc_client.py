@@ -15,11 +15,11 @@ class ServerCallback(MumbleServer.ServerCallback):
     def __init__(self, rpc_client):
         self.rpc_client = rpc_client
 
-    async def userConnected(self, state, current):
-        await self.rpc_client.on_user_connect()
+    async def userConnected(self, user, current):
+        await self.rpc_client.on_user_connect(user)
 
-    async def userDisconnected(self, state, current):
-        await self.rpc_client.on_user_disconnect()
+    async def userDisconnected(self, user, current):
+        await self.rpc_client.on_user_disconnect(user)
 
     async def channelCreated(self, state, current):
         pass
@@ -46,6 +46,10 @@ class RpcClient(Client):
             "on_user_disconnect": set(),
         }
         self.user_count: int = 0
+
+        # For reconciling state between setting up callbacks and getting initial state.
+        self._buffer: list
+        self._live: bool
 
     async def connect(self):
         self.ice_communicator = Ice.Communicator(eventLoop=asyncio.get_event_loop())
@@ -76,9 +80,20 @@ class RpcClient(Client):
         )
         adapter.activate()
 
-        await self.server.addCallbackAsync(callback_proxy)
+        self._buffer = []
+        self._live = False
 
-        self.user_count = len(await self.server.getUsersAsync())
+        await self.server.addCallbackAsync(callback_proxy)
+        users = await self.server.getUsersAsync()
+
+        for event in self._buffer:
+            if event["type"] == "connect":
+                users[event["user"].session] = event["user"]
+            elif event["type"] == "disconnect":
+                users.pop(event["user"].session, None)
+
+        self.user_count = len(users)
+        self._live = True
 
     async def disconnect(self):
         # Remove callbacks?
@@ -94,7 +109,11 @@ class RpcClient(Client):
     ) -> None:
         self._callbacks["on_user_disconnect"].add(func)
 
-    async def on_user_connect(self):
+    async def on_user_connect(self, user: MumbleServer.User):
+        if not self._live:
+            self._buffer.append({"type": "connect", "user": user})
+            return
+
         last_user_count = self.user_count
         self.user_count += 1
 
@@ -115,7 +134,11 @@ class RpcClient(Client):
                 )
                 logger.warning(f"Task {i} failed:\n{tb_str}")
 
-    async def on_user_disconnect(self):
+    async def on_user_disconnect(self, user: MumbleServer.User):
+        if not self._live:
+            self._buffer.append({"type": "disconnect", "user": user})
+            return
+
         last_user_count = self.user_count
         self.user_count -= 1
 
