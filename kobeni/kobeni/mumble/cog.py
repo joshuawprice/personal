@@ -154,12 +154,11 @@ class Mumble(commands.Cog):
             await voice_client.disconnect()
 
     @client.on_user_connect
-    @client.on_user_disconnect
     async def _send_notifications_if_needed(
         self, last_user_count: int, user_count: int
     ) -> None:
         """Send notifications when Mumble becomes active after cooldown."""
-        if not (last_user_count == 0 and user_count > 0):
+        if last_user_count != 0:
             return
 
         if self._is_on_cooldown():
@@ -177,11 +176,10 @@ class Mumble(commands.Cog):
             if isinstance(result, Exception):
                 logger.warning(f"Failed to notify {user}: {result}")
 
-    @client.on_user_connect
     @client.on_user_disconnect
     async def _set_empty_since(self, last_user_count: int, user_count: int) -> None:
         """Saves when last user disconnects from mumble server"""
-        if last_user_count > 0 and user_count == 0:
+        if user_count == 0:
             self.empty_since = time.monotonic()
 
     def _is_on_cooldown(self) -> bool:
