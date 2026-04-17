@@ -1,5 +1,4 @@
 import asyncio
-from collections.abc import Awaitable, Callable
 import logging
 import traceback
 
@@ -41,10 +40,7 @@ class RpcClient(Client):
     def __init__(self):
         self.ice_communicator: Ice.Communicator | None
         self.server: MumbleServer.ServerPrx
-        self._callbacks: dict[str, set[Callable[[int, int], Awaitable]]] = {
-            "on_user_connect": set(),
-            "on_user_disconnect": set(),
-        }
+
         self.user_count: int = 0
 
         # For reconciling state between setting up callbacks and getting initial state.
@@ -100,14 +96,6 @@ class RpcClient(Client):
 
         await self.ice_communicator.destroyAsync()
         self.ice_communicator = None
-
-    def add_user_connect_callback(self, func: Callable[[int, int], Awaitable]) -> None:
-        self._callbacks["on_user_connect"].add(func)
-
-    def add_user_disconnect_callback(
-        self, func: Callable[[int, int], Awaitable]
-    ) -> None:
-        self._callbacks["on_user_disconnect"].add(func)
 
     async def on_user_connect(self, user: MumbleServer.User):
         if not self._live:

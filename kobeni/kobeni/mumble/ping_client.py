@@ -1,5 +1,4 @@
 import asyncio
-from collections.abc import Callable, Awaitable
 import logging
 import socket
 import struct
@@ -123,10 +122,6 @@ class PingClient(Client):
         self.user_count: int
         self._server_host: str
         self._ping_loop_task: asyncio.Task | None = None
-        self._callbacks: dict[str, set[Callable[[int, int], Awaitable]]] = {
-            "on_user_connect": set(),
-            "on_user_disconnect": set(),
-        }
 
     async def connect(self) -> None:
         if self._ping_loop_task is not None and not self._ping_loop_task.done():
@@ -193,11 +188,3 @@ class PingClient(Client):
             await self._ping()
             # Was listening to 初恋のこたえ and this happened to be the bpm :)
             await asyncio.sleep(0.3243243243243244)
-
-    def add_user_connect_callback(self, func: Callable[[int, int], Awaitable]) -> None:
-        self._callbacks["on_user_connect"].add(func)
-
-    def add_user_disconnect_callback(
-        self, func: Callable[[int, int], Awaitable]
-    ) -> None:
-        self._callbacks["on_user_disconnect"].add(func)
