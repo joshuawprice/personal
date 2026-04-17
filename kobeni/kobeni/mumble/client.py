@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 
 
@@ -11,12 +12,12 @@ def on_user_disconnect(f):
     return f
 
 
-class Client:
-    async def connect(self) -> None:
-        raise NotImplementedError
+class Client(ABC):
+    @abstractmethod
+    async def connect(self) -> None: ...
 
-    async def disconnect(self) -> None:
-        raise NotImplementedError
+    @abstractmethod
+    async def disconnect(self) -> None: ...
 
     def register_callbacks(self, obj):
         for name in dir(obj):
