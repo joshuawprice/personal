@@ -1,9 +1,14 @@
 import asyncio
 import logging
+import os
+import sys
 import traceback
 
 import Ice
-from . import MumbleServer
+
+# The MumbleServer module uses absolute imports for sibling modules.
+sys.path.insert(0, os.path.dirname(__file__))
+import MumbleServer
 
 from .client import Client
 
