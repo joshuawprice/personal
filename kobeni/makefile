@@ -2,6 +2,10 @@
 build:
 	docker build -t kobeni .
 
+.PHONY: arm
+arm:
+	docker build -t kobeni:arm64 --platform=arm64 .
+
 .PHONY: run
 run: build
 	docker run --env-file=.env --network=host kobeni
