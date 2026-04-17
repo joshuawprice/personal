@@ -15,6 +15,9 @@ dependencies = [
     "zeroc-ice~=3.8.0,<3.9",
 ]
 
+[project.scripts]
+kobeni = "kobeni.cli:main"
+
 [build-system]
 requires = [
     "hatchling~=1.27",

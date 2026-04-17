@@ -38,4 +38,4 @@ USER nonroot
 
 WORKDIR /app
 
-CMD ["python", "-m", "kobeni"]
+CMD ["kobeni"]
