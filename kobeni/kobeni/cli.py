@@ -36,10 +36,6 @@ class Bot(commands.Bot):
 
         await self.add_cog(Mumble(self))
 
-    async def close(self):
-        logger.info("Shutting down bot...")
-        await super().close()
-
     async def on_ready(self):
         logger.info(f"We have logged in as {self.user}")
 

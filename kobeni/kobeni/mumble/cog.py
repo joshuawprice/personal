@@ -82,7 +82,7 @@ class Mumble(commands.Cog):
     async def on_ready(self):
         self.users = NotifyUsers(self.bot)
 
-        logger.info("Calling mumble_client.connect()")
+        logger.info("Connecting to mumble server")
         await self.mumble_client.connect()
 
         await asyncio.gather(
