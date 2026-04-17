@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
+import asyncio
 from collections.abc import Awaitable, Callable
 from functools import wraps
+import logging
+import traceback
+
+logger = logging.getLogger(__name__)
 
 
 def on_user_connect(f):
@@ -58,3 +63,41 @@ class Client(ABC):
         self, func: Callable[[int, int], Awaitable]
     ) -> None:
         self._callbacks["on_user_disconnect"].add(func)
+
+    async def invoke_user_connect_callbacks(self, last_user_count, user_count) -> None:
+        results = await asyncio.gather(
+            *(
+                f(last_user_count, user_count)
+                for f in self._callbacks["on_user_connect"]
+            ),
+            return_exceptions=True,
+        )
+
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                tb_str = "".join(
+                    traceback.format_exception(
+                        type(result), result, result.__traceback__
+                    )
+                )
+                logger.warning(f"Task {i} failed:\n{tb_str}")
+
+    async def invoke_user_disconnect_callbacks(
+        self, last_user_count, user_count
+    ) -> None:
+        results = await asyncio.gather(
+            *(
+                f(last_user_count, user_count)
+                for f in self._callbacks["on_user_disconnect"]
+            ),
+            return_exceptions=True,
+        )
+
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                tb_str = "".join(
+                    traceback.format_exception(
+                        type(result), result, result.__traceback__
+                    )
+                )
+                logger.warning(f"Task {i} failed:\n{tb_str}")

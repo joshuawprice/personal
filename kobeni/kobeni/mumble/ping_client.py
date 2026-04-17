@@ -3,7 +3,6 @@ import logging
 import socket
 import struct
 import time
-import traceback
 
 from google.protobuf.runtime_version import VersionError
 
@@ -164,23 +163,11 @@ class PingClient(Client):
             return
 
         if self.user_count > last_user_count:
-            event = "on_user_connect"
+            await self.invoke_user_connect_callbacks(last_user_count, self.user_count)
         else:
-            event = "on_user_disconnect"
-
-        results = await asyncio.gather(
-            *(f(last_user_count, self.user_count) for f in self._callbacks[event]),
-            return_exceptions=True,
-        )
-
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                tb_str = "".join(
-                    traceback.format_exception(
-                        type(result), result, result.__traceback__
-                    )
-                )
-                logger.warning(f"Task {i} failed:\n{tb_str}")
+            await self.invoke_user_disconnect_callbacks(
+                last_user_count, self.user_count
+            )
 
     async def _ping_loop(self) -> None:
         while True:

@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import sys
-import traceback
 
 import Ice
 
@@ -110,22 +109,7 @@ class RpcClient(Client):
         last_user_count = self.user_count
         self.user_count += 1
 
-        results = await asyncio.gather(
-            *(
-                f(last_user_count, self.user_count)
-                for f in self._callbacks["on_user_connect"]
-            ),
-            return_exceptions=True,
-        )
-
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                tb_str = "".join(
-                    traceback.format_exception(
-                        type(result), result, result.__traceback__
-                    )
-                )
-                logger.warning(f"Task {i} failed:\n{tb_str}")
+        await super().invoke_user_connect_callbacks(last_user_count, self.user_count)
 
     async def on_user_disconnect(self, user: MumbleServer.User):
         if not self._live:
@@ -135,19 +119,4 @@ class RpcClient(Client):
         last_user_count = self.user_count
         self.user_count -= 1
 
-        results = await asyncio.gather(
-            *(
-                f(last_user_count, self.user_count)
-                for f in self._callbacks["on_user_disconnect"]
-            ),
-            return_exceptions=True,
-        )
-
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                tb_str = "".join(
-                    traceback.format_exception(
-                        type(result), result, result.__traceback__
-                    )
-                )
-                logger.warning(f"Task {i} failed:\n{tb_str}")
+        await super().invoke_user_disconnect_callbacks(last_user_count, self.user_count)
