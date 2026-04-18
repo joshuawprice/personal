@@ -9,7 +9,7 @@ import traceback
 logger = logging.getLogger(__name__)
 
 
-class ServerEvent(Enum):
+class ServerEventType(Enum):
     """All server events that run callbacks."""
 
     USER_CONNECT = auto()
@@ -23,14 +23,14 @@ class ServerEvent(Enum):
 
 def on_user_connect(f):
     events: set = getattr(f, "_on_mumble_event", set())
-    events.add(ServerEvent.USER_CONNECT)
+    events.add(ServerEventType.USER_CONNECT)
     f._on_mumble_event = events
     return f
 
 
 def on_user_disconnect(f):
     events: set = getattr(f, "_on_mumble_event", set())
-    events.add(ServerEvent.USER_DISCONNECT)
+    events.add(ServerEventType.USER_DISCONNECT)
     f._on_mumble_event = events
     return f
 
@@ -38,8 +38,8 @@ def on_user_disconnect(f):
 class Client(ABC):
     def __init__(self):
         self._callbacks: dict[str, set[Callable[[int, int], Awaitable]]] = {
-            ServerEvent.USER_CONNECT: set(),
-            ServerEvent.USER_DISCONNECT: set(),
+            ServerEventType.USER_CONNECT: set(),
+            ServerEventType.USER_DISCONNECT: set(),
         }
 
     def __init_subclass__(cls, **kwargs):
@@ -76,7 +76,7 @@ class Client(ABC):
                 self._callbacks[event].add(method)
 
     async def _invoke_callbacks(
-        self, event_type: ServerEvent, last_user_count: int, user_count: int
+        self, event_type: ServerEventType, last_user_count: int, user_count: int
     ) -> None:
         results = await asyncio.gather(
             *(f(last_user_count, user_count) for f in self._callbacks[event_type]),
