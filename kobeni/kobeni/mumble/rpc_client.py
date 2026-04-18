@@ -87,9 +87,9 @@ class RpcClient(Client):
         users = await self.server.getUsersAsync()
 
         for event in self._buffer:
-            if event["type"] == "connect":
+            if event["type"] == ServerEvent.USER_CONNECT:
                 users[event["user"].session] = event["user"]
-            elif event["type"] == "disconnect":
+            elif event["type"] == ServerEvent.USER_DISCONNECT:
                 users.pop(event["user"].session, None)
 
         self.user_count = len(users)
@@ -103,7 +103,7 @@ class RpcClient(Client):
 
     async def on_user_connect(self, user: MumbleServer.User):
         if not self._live:
-            self._buffer.append({"type": "connect", "user": user})
+            self._buffer.append({"type": ServerEvent.USER_CONNECT, "user": user})
             return
 
         last_user_count = self.user_count
@@ -115,7 +115,7 @@ class RpcClient(Client):
 
     async def on_user_disconnect(self, user: MumbleServer.User):
         if not self._live:
-            self._buffer.append({"type": "disconnect", "user": user})
+            self._buffer.append({"type": ServerEvent.USER_DISCONNECT, "user": user})
             return
 
         last_user_count = self.user_count
