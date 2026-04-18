@@ -9,7 +9,7 @@ import Ice
 sys.path.insert(0, os.path.dirname(__file__))
 import MumbleServer
 
-from .client import Client
+from .client import Client, ServerEvent
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +109,9 @@ class RpcClient(Client):
         last_user_count = self.user_count
         self.user_count += 1
 
-        await super().invoke_user_connect_callbacks(last_user_count, self.user_count)
+        await self.invoke_callbacks(
+            ServerEvent.USER_CONNECT, last_user_count, self.user_count
+        )
 
     async def on_user_disconnect(self, user: MumbleServer.User):
         if not self._live:
@@ -119,4 +121,6 @@ class RpcClient(Client):
         last_user_count = self.user_count
         self.user_count -= 1
 
-        await super().invoke_user_disconnect_callbacks(last_user_count, self.user_count)
+        await self.invoke_callbacks(
+            ServerEvent.USER_DISCONNECT, last_user_count, self.user_count
+        )

@@ -15,7 +15,7 @@ except VersionError as e:
     )
     raise e
 
-from .client import Client
+from .client import Client, ServerEvent
 
 logger = logging.getLogger(__name__)
 
@@ -163,10 +163,12 @@ class PingClient(Client):
             return
 
         if self.user_count > last_user_count:
-            await self.invoke_user_connect_callbacks(last_user_count, self.user_count)
+            await self.invoke_callbacks(
+                ServerEvent.USER_CONNECT, last_user_count, self.user_count
+            )
         else:
-            await self.invoke_user_disconnect_callbacks(
-                last_user_count, self.user_count
+            await self.invoke_callbacks(
+                ServerEvent.USER_DISCONNECT, last_user_count, self.user_count
             )
 
     async def _ping_loop(self) -> None:

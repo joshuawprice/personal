@@ -75,32 +75,11 @@ class Client(ABC):
             for event in events:
                 self._callbacks[event].add(method)
 
-    async def invoke_user_connect_callbacks(self, last_user_count, user_count) -> None:
-        results = await asyncio.gather(
-            *(
-                f(last_user_count, user_count)
-                for f in self._callbacks[ServerEvent.USER_CONNECT]
-            ),
-            return_exceptions=True,
-        )
-
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                tb_str = "".join(
-                    traceback.format_exception(
-                        type(result), result, result.__traceback__
-                    )
-                )
-                logger.warning(f"Task {i} failed:\n{tb_str}")
-
-    async def invoke_user_disconnect_callbacks(
-        self, last_user_count, user_count
+    async def invoke_callbacks(
+        self, event_type: ServerEvent, last_user_count: int, user_count: int
     ) -> None:
         results = await asyncio.gather(
-            *(
-                f(last_user_count, user_count)
-                for f in self._callbacks[ServerEvent.USER_DISCONNECT]
-            ),
+            *(f(last_user_count, user_count) for f in self._callbacks[event_type]),
             return_exceptions=True,
         )
 
