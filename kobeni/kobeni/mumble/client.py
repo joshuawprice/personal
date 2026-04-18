@@ -65,17 +65,9 @@ class Client(ABC):
                 continue
 
             if getattr(method, "_on_mumble_client_user_connect", False):
-                self.add_user_connect_callback(method)
+                self._callbacks[ServerEvent.USER_CONNECT].add(method)
             if getattr(method, "_on_mumble_client_user_disconnect", False):
-                self.add_user_disconnect_callback(method)
-
-    def add_user_connect_callback(self, func: Callable[[int, int], Awaitable]) -> None:
-        self._callbacks[ServerEvent.USER_CONNECT].add(func)
-
-    def add_user_disconnect_callback(
-        self, func: Callable[[int, int], Awaitable]
-    ) -> None:
-        self._callbacks[ServerEvent.USER_DISCONNECT].add(func)
+                self._callbacks[ServerEvent.USER_DISCONNECT].add(method)
 
     async def invoke_user_connect_callbacks(self, last_user_count, user_count) -> None:
         results = await asyncio.gather(
