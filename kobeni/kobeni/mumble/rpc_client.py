@@ -84,15 +84,11 @@ class RpcClient(Client):
         self._live = False
 
         await self.server.addCallbackAsync(callback_proxy)
-        users = await self.server.getUsersAsync()
+        self.user_count = len(await self.server.getUsersAsync())
 
         for event in self._buffer:
-            if event["type"] == ServerEvent.USER_CONNECT:
-                users[event["user"].session] = event["user"]
-            elif event["type"] == ServerEvent.USER_DISCONNECT:
-                users.pop(event["user"].session, None)
+            self.on_ice_callback(event["type"], event["user"])
 
-        self.user_count = len(users)
         self._live = True
 
     async def disconnect(self):
