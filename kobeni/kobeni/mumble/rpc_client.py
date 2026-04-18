@@ -49,7 +49,7 @@ class RpcClient(Client):
 
         # For reconciling state between setting up callbacks and getting initial state.
         self._buffer: list
-        self._live: bool
+        self._live: bool = False
 
     async def connect(self):
         self.ice_communicator = Ice.Communicator(eventLoop=asyncio.get_event_loop())
@@ -81,7 +81,6 @@ class RpcClient(Client):
         adapter.activate()
 
         self._buffer = []
-        self._live = False
 
         await self.server.addCallbackAsync(callback_proxy)
         self.user_count = len(await self.server.getUsersAsync())
@@ -92,6 +91,7 @@ class RpcClient(Client):
         self._live = True
 
     async def disconnect(self):
+        self._live = False
         # Remove callbacks?
 
         await self.ice_communicator.destroyAsync()
