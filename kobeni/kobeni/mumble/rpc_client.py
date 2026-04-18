@@ -9,20 +9,31 @@ import Ice
 sys.path.insert(0, os.path.dirname(__file__))
 import MumbleServer
 
-from .client import Client, ServerEventType
+from .client import (
+    Client,
+    ServerEventType,
+    User,
+    ServerEvent,
+    UserConnectEvent,
+    UserDisconnectEvent,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def user_from_ice(ice_user: MumbleServer.User) -> User:
+    return User(name=ice_user.name)
 
 
 class ServerCallback(MumbleServer.ServerCallback):
     def __init__(self, rpc_client):
         self.rpc_client = rpc_client
 
-    async def userConnected(self, user, current):
-        await self.rpc_client.on_ice_callback(ServerEventType.USER_CONNECT, user)
+    async def userConnected(self, user: MumbleServer.User, current):
+        await self.rpc_client.on_ice_callback(UserConnectEvent(user_from_ice(user)))
 
-    async def userDisconnected(self, user, current):
-        await self.rpc_client.on_ice_callback(ServerEventType.USER_DISCONNECT, user)
+    async def userDisconnected(self, user: MumbleServer.User, current):
+        await self.rpc_client.on_ice_callback(UserDisconnectEvent(user_from_ice(user)))
 
     async def channelCreated(self, state, current):
         pass
@@ -86,7 +97,7 @@ class RpcClient(Client):
         self.user_count = len(await self.server.getUsersAsync())
 
         for event in self._buffer:
-            self.on_ice_callback(event["type"], event["user"])
+            self.on_ice_callback(event)
 
         self._live = True
 
@@ -97,19 +108,17 @@ class RpcClient(Client):
         await self.ice_communicator.destroyAsync()
         self.ice_communicator = None
 
-    async def on_ice_callback(
-        self, event_type: ServerEventType, user: MumbleServer.User
-    ):
+    async def on_ice_callback(self, event: ServerEvent):
         if not self._live:
-            self._buffer.append({"type": event_type, "user": user})
+            self._buffer.append(event)
             return
 
         last_user_count = self.user_count
 
-        match event_type:
+        match event.type:
             case ServerEventType.USER_CONNECT:
                 self.user_count += 1
             case ServerEventType.USER_DISCONNECT:
                 self.user_count -= 1
 
-        await self._invoke_callbacks(event_type, last_user_count, self.user_count)
+        await self._invoke_callbacks(event.type, last_user_count, self.user_count)
