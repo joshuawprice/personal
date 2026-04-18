@@ -56,7 +56,7 @@ class RpcClient(Client):
 
         # TODO: Get host dynamically
         meta = MumbleServer.MetaPrx(
-            self.ice_communicator, "Meta:tcp -h mumble-server -p 6502 -t 60000"
+            self.ice_communicator, "Meta:tcp -h mumble -p 6502 -t 60000"
         )
 
         # This should only be the one server retrieved for now.

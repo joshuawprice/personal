@@ -1,8 +1,8 @@
 services:
-  mumble-server:
+  mumble:
     image: mumblevoip/mumble-server:latest
-    container_name: mumble-server
-    hostname: mumble-server
+    container_name: mumble
+    hostname: mumble
     ports:
       - 64738:64738
       - 64738:64738/udp
