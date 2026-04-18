@@ -1,11 +1,24 @@
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable
+from enum import auto, Enum
 from functools import wraps
 import logging
 import traceback
 
 logger = logging.getLogger(__name__)
+
+
+class ServerEvent(Enum):
+    """All server events that run callbacks."""
+
+    USER_CONNECT = auto()
+    USER_DISCONNECT = auto()
+    USER_CHANGE = auto()
+    USER_TEXT_MESSAGE = auto()
+    CHANNEL_CREATE = auto()
+    CHANNEL_DELETE = auto()
+    CHANNEL_CHANGE = auto()
 
 
 def on_user_connect(f):
@@ -21,8 +34,8 @@ def on_user_disconnect(f):
 class Client(ABC):
     def __init__(self):
         self._callbacks: dict[str, set[Callable[[int, int], Awaitable]]] = {
-            "on_user_connect": set(),
-            "on_user_disconnect": set(),
+            ServerEvent.USER_CONNECT: set(),
+            ServerEvent.USER_DISCONNECT: set(),
         }
 
     def __init_subclass__(cls, **kwargs):
@@ -57,18 +70,18 @@ class Client(ABC):
                 self.add_user_disconnect_callback(method)
 
     def add_user_connect_callback(self, func: Callable[[int, int], Awaitable]) -> None:
-        self._callbacks["on_user_connect"].add(func)
+        self._callbacks[ServerEvent.USER_CONNECT].add(func)
 
     def add_user_disconnect_callback(
         self, func: Callable[[int, int], Awaitable]
     ) -> None:
-        self._callbacks["on_user_disconnect"].add(func)
+        self._callbacks[ServerEvent.USER_DISCONNECT].add(func)
 
     async def invoke_user_connect_callbacks(self, last_user_count, user_count) -> None:
         results = await asyncio.gather(
             *(
                 f(last_user_count, user_count)
-                for f in self._callbacks["on_user_connect"]
+                for f in self._callbacks[ServerEvent.USER_CONNECT]
             ),
             return_exceptions=True,
         )
@@ -88,7 +101,7 @@ class Client(ABC):
         results = await asyncio.gather(
             *(
                 f(last_user_count, user_count)
-                for f in self._callbacks["on_user_disconnect"]
+                for f in self._callbacks[ServerEvent.USER_DISCONNECT]
             ),
             return_exceptions=True,
         )
