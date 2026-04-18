@@ -22,12 +22,16 @@ class ServerEvent(Enum):
 
 
 def on_user_connect(f):
-    f._on_mumble_client_user_connect = True
+    events: set = getattr(f, "_on_mumble_event", set())
+    events.add(ServerEvent.USER_CONNECT)
+    f._on_mumble_event = events
     return f
 
 
 def on_user_disconnect(f):
-    f._on_mumble_client_user_disconnect = True
+    events: set = getattr(f, "_on_mumble_event", set())
+    events.add(ServerEvent.USER_DISCONNECT)
+    f._on_mumble_event = events
     return f
 
 
@@ -64,10 +68,12 @@ class Client(ABC):
             if not callable(method):
                 continue
 
-            if getattr(method, "_on_mumble_client_user_connect", False):
-                self._callbacks[ServerEvent.USER_CONNECT].add(method)
-            if getattr(method, "_on_mumble_client_user_disconnect", False):
-                self._callbacks[ServerEvent.USER_DISCONNECT].add(method)
+            events = getattr(method, "_on_mumble_event", None)
+            if not events:
+                continue
+
+            for event in events:
+                self._callbacks[event].add(method)
 
     async def invoke_user_connect_callbacks(self, last_user_count, user_count) -> None:
         results = await asyncio.gather(
