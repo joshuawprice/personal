@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from enum import auto, Enum
 from functools import wraps
 import logging
@@ -19,6 +20,11 @@ class ServerEventType(Enum):
     CHANNEL_CREATE = auto()
     CHANNEL_DELETE = auto()
     CHANNEL_CHANGE = auto()
+
+
+@dataclass(frozen=True)
+class User:
+    name: str
 
 
 def on_user_connect(f):
