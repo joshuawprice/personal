@@ -6,6 +6,7 @@ from enum import auto, Enum
 from functools import wraps
 import logging
 import traceback
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,26 @@ class ServerEventType(Enum):
 @dataclass(frozen=True)
 class User:
     name: str
+
+
+@dataclass(frozen=True)
+class ServerEvent:
+    type: ClassVar[ServerEventType]
+
+
+@dataclass(frozen=True)
+class UserEvent(ServerEvent):
+    user: User | None
+
+
+@dataclass(frozen=True)
+class UserConnectEvent(UserEvent):
+    type = ServerEventType.USER_CONNECT
+
+
+@dataclass(frozen=True)
+class UserDisconnectEvent(UserEvent):
+    type = ServerEventType.USER_DISCONNECT
 
 
 def on_user_connect(f):
