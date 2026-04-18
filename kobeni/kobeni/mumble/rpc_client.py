@@ -19,10 +19,10 @@ class ServerCallback(MumbleServer.ServerCallback):
         self.rpc_client = rpc_client
 
     async def userConnected(self, user, current):
-        await self.rpc_client.on_user_connect(user)
+        await self.rpc_client.on_ice_callback(ServerEvent.USER_CONNECT, user)
 
     async def userDisconnected(self, user, current):
-        await self.rpc_client.on_user_disconnect(user)
+        await self.rpc_client.on_ice_callback(ServerEvent.USER_DISCONNECT, user)
 
     async def channelCreated(self, state, current):
         pass
@@ -101,26 +101,17 @@ class RpcClient(Client):
         await self.ice_communicator.destroyAsync()
         self.ice_communicator = None
 
-    async def on_user_connect(self, user: MumbleServer.User):
+    async def on_ice_callback(self, event_type: ServerEvent, user: MumbleServer.User):
         if not self._live:
-            self._buffer.append({"type": ServerEvent.USER_CONNECT, "user": user})
+            self._buffer.append({"type": event_type, "user": user})
             return
 
         last_user_count = self.user_count
-        self.user_count += 1
 
-        await self.invoke_callbacks(
-            ServerEvent.USER_CONNECT, last_user_count, self.user_count
-        )
+        match event_type:
+            case ServerEvent.USER_CONNECT:
+                self.user_count += 1
+            case ServerEvent.USER_DISCONNECT:
+                self.user_count -= 1
 
-    async def on_user_disconnect(self, user: MumbleServer.User):
-        if not self._live:
-            self._buffer.append({"type": ServerEvent.USER_DISCONNECT, "user": user})
-            return
-
-        last_user_count = self.user_count
-        self.user_count -= 1
-
-        await self.invoke_callbacks(
-            ServerEvent.USER_DISCONNECT, last_user_count, self.user_count
-        )
+        await self.invoke_callbacks(event_type, last_user_count, self.user_count)
