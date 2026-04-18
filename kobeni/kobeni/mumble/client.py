@@ -75,7 +75,7 @@ class Client(ABC):
             for event in events:
                 self._callbacks[event].add(method)
 
-    async def invoke_callbacks(
+    async def _invoke_callbacks(
         self, event_type: ServerEvent, last_user_count: int, user_count: int
     ) -> None:
         results = await asyncio.gather(

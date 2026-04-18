@@ -114,4 +114,4 @@ class RpcClient(Client):
             case ServerEvent.USER_DISCONNECT:
                 self.user_count -= 1
 
-        await self.invoke_callbacks(event_type, last_user_count, self.user_count)
+        await self._invoke_callbacks(event_type, last_user_count, self.user_count)

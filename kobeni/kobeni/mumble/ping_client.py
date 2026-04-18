@@ -163,11 +163,11 @@ class PingClient(Client):
             return
 
         if self.user_count > last_user_count:
-            await self.invoke_callbacks(
+            await self._invoke_callbacks(
                 ServerEvent.USER_CONNECT, last_user_count, self.user_count
             )
         else:
-            await self.invoke_callbacks(
+            await self._invoke_callbacks(
                 ServerEvent.USER_DISCONNECT, last_user_count, self.user_count
             )
 
