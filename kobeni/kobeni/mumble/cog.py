@@ -9,8 +9,14 @@ import discord
 from discord.ext import commands
 
 from .rpc_client import RpcClient
-from . import client
-from client import UserEvent, UserConnectEvent, UserDisconnectEvent
+from kobeni.mumble import client
+from kobeni.mumble.client import (
+    ServerEventType,
+    UserEvent,
+    UserConnectEvent,
+    UserDisconnectEvent,
+)
+
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -132,8 +138,8 @@ class Mumble(commands.Cog):
             self.users.append(user)
             await ctx.message.add_reaction("🔔")
 
-    @client.on_user_connect
-    @client.on_user_disconnect
+    @client.on_server_event(ServerEventType.USER_CONNECT)
+    @client.on_server_event(ServerEventType.USER_DISCONNECT)
     async def _update_channel_status(
         self,
         event: UserEvent,
@@ -147,8 +153,8 @@ class Mumble(commands.Cog):
         logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
         await channel.edit(status=f"{user_count} {pluralised_user_string} on Mumble")
 
-    @client.on_user_connect
-    @client.on_user_disconnect
+    @client.on_server_event(ServerEventType.USER_CONNECT)
+    @client.on_server_event(ServerEventType.USER_DISCONNECT)
     async def _manage_voice_connection(
         self,
         event: UserEvent,
@@ -167,7 +173,7 @@ class Mumble(commands.Cog):
             logger.info(f"Disconnecting from {channel.name} in {guild.name}")
             await voice_client.disconnect()
 
-    @client.on_user_connect
+    @client.on_server_event(ServerEventType.USER_CONNECT)
     async def _send_notifications_if_needed(
         self,
         event: UserConnectEvent,
@@ -194,7 +200,7 @@ class Mumble(commands.Cog):
             if isinstance(result, Exception):
                 logger.warning(f"Failed to notify {user}: {result}")
 
-    @client.on_user_disconnect
+    @client.on_server_event(ServerEventType.USER_DISCONNECT)
     async def _set_empty_since(
         self,
         event: UserDisconnectEvent,

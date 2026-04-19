@@ -48,18 +48,13 @@ class UserDisconnectEvent(UserEvent):
     type = ServerEventType.USER_DISCONNECT
 
 
-def on_user_connect(f):
-    events: set = getattr(f, "_on_mumble_event", set())
-    events.add(ServerEventType.USER_CONNECT)
-    f._on_mumble_event = events
-    return f
+def on_server_event(*events: ServerEventType) -> Callable:
+    def decorator(f: Callable) -> Callable:
+        registered_events: set = getattr(f, "_on_mumble_event", set())
+        f._on_mumble_event = registered_events.union(events)
+        return f
 
-
-def on_user_disconnect(f):
-    events: set = getattr(f, "_on_mumble_event", set())
-    events.add(ServerEventType.USER_DISCONNECT)
-    f._on_mumble_event = events
-    return f
+    return decorator
 
 
 class Client(ABC):
