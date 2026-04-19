@@ -103,10 +103,10 @@ class Client(ABC):
                 self._callbacks[event].add(method)
 
     async def _invoke_callbacks(
-        self, event_type: ServerEventType, last_user_count: int, user_count: int
+        self, event: ServerEvent, last_user_count: int, user_count: int
     ) -> None:
         results = await asyncio.gather(
-            *(f(last_user_count, user_count) for f in self._callbacks[event_type]),
+            *(f(last_user_count, user_count) for f in self._callbacks[event.type]),
             return_exceptions=True,
         )
 
