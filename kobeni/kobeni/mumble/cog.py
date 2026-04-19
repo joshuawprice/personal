@@ -183,7 +183,8 @@ class Mumble(commands.Cog):
             return
 
         logger.info("Pinging users for Mumble")
-        msg = "Mumble just became active!"
+        name = event.user.name if event.user is not None else "Someone"
+        msg = f"{name} just joined Mumble!"
         results = await asyncio.gather(
             *[self._send_notification(user, msg) for user in self.users],
             return_exceptions=True,
