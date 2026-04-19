@@ -9,7 +9,7 @@ import Ice
 sys.path.insert(0, os.path.dirname(__file__))
 import MumbleServer
 
-from .client import (
+from kobeni.mumble.client import (
     Client,
     ServerEventType,
     User,

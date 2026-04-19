@@ -7,7 +7,7 @@ import time
 from google.protobuf.runtime_version import VersionError
 
 try:
-    from . import MumbleUDP_pb2
+    from kobeni.mumble import MumbleUDP_pb2
 except VersionError as e:
     e.add_note(
         "Version error on trying to import mumble protobuf python module. "
@@ -15,7 +15,7 @@ except VersionError as e:
     )
     raise e
 
-from .client import Client, UserConnectEvent, UserDisconnectEvent
+from kobeni.mumble.client import Client, UserConnectEvent, UserDisconnectEvent
 
 logger = logging.getLogger(__name__)
 

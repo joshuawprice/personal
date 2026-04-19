@@ -8,8 +8,8 @@ import time
 import discord
 from discord.ext import commands
 
-from .rpc_client import RpcClient
 from kobeni.mumble import client
+from kobeni.mumble.rpc_client import RpcClient
 from kobeni.mumble.client import (
     ServerEventType,
     UserEvent,
