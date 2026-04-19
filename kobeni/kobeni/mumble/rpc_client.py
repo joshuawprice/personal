@@ -73,16 +73,15 @@ class RpcClient(Client):
         # This should only be the one server retrieved for now.
         self.server = (await meta.getAllServersAsync())[0]
 
-        # For some reason the proxy uses the internal docker ip address, which
-        # of course is not accessible from my local machine.
-        #
-        # A little gross, but I couldn't get Ice.Default.Host property to work.
-        # TODO: This may not be necessary when the discord bot and mumble server
-        #       are running on the same host.
+        # The returned server proxy's endpoint is set to the ice
+        # server's local address. If this address is not reachable by
+        # this ice client, requests using the server proxy will fail.
         endpoint = meta.ice_getEndpoints()
         self.server = self.server.ice_endpoints((endpoint))
 
-        # Add callbacks
+        # Setup adapter to receive callbacks from the server.
+        # The firewall on the host must allow incoming connections to
+        # receive the callbacks.
         adapter = self.ice_communicator.createObjectAdapterWithEndpoints(
             "ServerCallbackAdapter", "tcp"
         )
