@@ -10,6 +10,7 @@ from discord.ext import commands
 
 from .rpc_client import RpcClient
 from . import client
+from client import UserEvent, UserConnectEvent, UserDisconnectEvent
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -86,8 +87,12 @@ class Mumble(commands.Cog):
         await self.mumble_client.connect()
 
         await asyncio.gather(
-            self._update_channel_status(0, self.mumble_client.user_count),
-            self._manage_voice_connection(0, self.mumble_client.user_count),
+            self._update_channel_status(
+                UserEvent(None), 0, self.mumble_client.user_count
+            ),
+            self._manage_voice_connection(
+                UserEvent(None), 0, self.mumble_client.user_count
+            ),
         )
 
     async def cog_unload(self):
@@ -109,7 +114,9 @@ class Mumble(commands.Cog):
             and len(before.channel.members) == 0
         ):
             logger.info("Resetting discord channel status as last user has left")
-            await self._update_channel_status(0, self.mumble_client.user_count)
+            await self._update_channel_status(
+                UserEvent(None), 0, self.mumble_client.user_count
+            )
 
     @commands.command()
     async def notify(self, ctx):
@@ -128,7 +135,10 @@ class Mumble(commands.Cog):
     @client.on_user_connect
     @client.on_user_disconnect
     async def _update_channel_status(
-        self, last_user_count: int, user_count: int
+        self,
+        event: UserEvent,
+        last_user_count: int,
+        user_count: int,
     ) -> None:
         """Update Discord channel status with current user count."""
         channel = self.bot.get_channel(self.voice_channel_id)
@@ -140,7 +150,10 @@ class Mumble(commands.Cog):
     @client.on_user_connect
     @client.on_user_disconnect
     async def _manage_voice_connection(
-        self, last_user_count: int, user_count: int
+        self,
+        event: UserEvent,
+        last_user_count: int,
+        user_count: int,
     ) -> None:
         """Connect or disconnect voice client based on user count."""
         channel = self.bot.get_channel(self.voice_channel_id)
@@ -156,7 +169,10 @@ class Mumble(commands.Cog):
 
     @client.on_user_connect
     async def _send_notifications_if_needed(
-        self, last_user_count: int, user_count: int
+        self,
+        event: UserConnectEvent,
+        last_user_count: int,
+        user_count: int,
     ) -> None:
         """Send notifications when Mumble becomes active after cooldown."""
         if last_user_count != 0:
@@ -178,7 +194,12 @@ class Mumble(commands.Cog):
                 logger.warning(f"Failed to notify {user}: {result}")
 
     @client.on_user_disconnect
-    async def _set_empty_since(self, last_user_count: int, user_count: int) -> None:
+    async def _set_empty_since(
+        self,
+        event: UserDisconnectEvent,
+        last_user_count: int,
+        user_count: int,
+    ) -> None:
         """Saves when last user disconnects from mumble server"""
         if user_count == 0:
             self.empty_since = time.monotonic()

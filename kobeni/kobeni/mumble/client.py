@@ -106,7 +106,10 @@ class Client(ABC):
         self, event: ServerEvent, last_user_count: int, user_count: int
     ) -> None:
         results = await asyncio.gather(
-            *(f(last_user_count, user_count) for f in self._callbacks[event.type]),
+            *(
+                f(event, last_user_count, user_count)
+                for f in self._callbacks[event.type]
+            ),
             return_exceptions=True,
         )
 
