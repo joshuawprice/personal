@@ -97,7 +97,7 @@ class RpcClient(Client):
         self.user_count = len(await self.server.getUsersAsync())
 
         for event in self._buffer:
-            self.on_ice_callback(event)
+            await self.on_ice_callback(event)
 
         self._live = True
 
