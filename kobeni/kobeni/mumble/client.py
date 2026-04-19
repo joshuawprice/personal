@@ -60,8 +60,7 @@ def on_server_event(*events: ServerEventType) -> Callable:
 class Client(ABC):
     def __init__(self):
         self._callbacks: dict[str, set[Callable[[int, int], Awaitable]]] = {
-            ServerEventType.USER_CONNECT: set(),
-            ServerEventType.USER_DISCONNECT: set(),
+            event_type: set() for event_type in ServerEventType
         }
 
     def __init_subclass__(cls, **kwargs):
