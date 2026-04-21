@@ -78,7 +78,14 @@ class Client(ABC):
         cls.__init__ = new_init
 
     @abstractmethod
-    async def connect(self) -> None: ...
+    async def connect(self) -> None:
+        """Connects to the mumble server.
+
+        Raises:
+            ConnectionError: An error occurred connecting to the mumble
+              server.
+        """
+        ...
 
     @abstractmethod
     async def disconnect(self) -> None: ...

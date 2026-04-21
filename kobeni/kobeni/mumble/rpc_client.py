@@ -68,8 +68,16 @@ class RpcClient(Client):
         # TODO: Get host dynamically
         meta = MumbleServer.MetaPrx(self.ice_communicator, "Meta:tcp -h mumble -p 6502")
 
-        # This should only be the one server retrieved for now.
-        self.server = (await meta.getAllServersAsync())[0]
+        MAX_ATTEMPTS = 3
+        for attempt in range(MAX_ATTEMPTS):
+            try:
+                # This should be the only server retrieved for now.
+                self.server = (await meta.getAllServersAsync())[0]
+                break
+            except (Ice.DNSException, Ice.ConnectFailedException) as exc:
+                if attempt == MAX_ATTEMPTS - 1:
+                    raise ConnectionError("Failed to connect to mumble server") from exc
+                await asyncio.sleep(5)
 
         # The returned server proxy's endpoint is set to the ice
         # server's local address. If this address is not reachable by
