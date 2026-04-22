@@ -82,6 +82,9 @@ class RpcClient(Client):
                     raise ConnectionError("Failed to connect to mumble server") from exc
                 await asyncio.sleep(5)
 
+        conn = meta.ice_getConnection()
+        conn.setCloseCallback(lambda a: logger.critical("here2: %s", a))
+
         # The returned server proxy's endpoint is set to the ice
         # server's local address. If this address is not reachable by
         # this ice client, requests using the server proxy will fail.
