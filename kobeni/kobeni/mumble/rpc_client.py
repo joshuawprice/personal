@@ -63,6 +63,9 @@ class RpcClient(Client):
         self._live: bool = False
 
     async def connect(self):
+        if self._live:
+            return
+
         self.ice_communicator = Ice.Communicator(eventLoop=asyncio.get_event_loop())
 
         # TODO: Get host dynamically
