@@ -1,3 +1,9 @@
+# Requires AWS and Cloudflare to be logged in:
+# `aws sso login`
+#
+# .env
+# export CLOUDFLARE_API_TOKEN=<token>
+
 terraform {
   required_providers {
     aws = {
