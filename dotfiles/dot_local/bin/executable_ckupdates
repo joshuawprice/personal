@@ -28,9 +28,9 @@ if ! network_check asgard.jprice.uk \
 fi
 
 # Support downloading repo packages with the -d flag.
-if [ $# -ge 1 ]; then
-    checkupdates "$@"
-    exit 0
+if [ $# -ge 1 ] && [ "$1" = '-d' ]; then
+        checkupdates "$@"
+        exit 0
 fi
 
 # Retrieve list of updates.
@@ -73,6 +73,11 @@ if [ -z "$updates" ]; then
     echo "No updates. You're up to date!" >&2
 else
     echo "$updates"
+fi
+
+# Print all updates if given -a flag
+if [ $# -ge 1 ] && [ "$1" = '-a' ]; then
+    flatpak remote-ls --updates
 fi
 
 if [ -n "${checkupdates_exit_code:-}" ] || [ -n "${paru_exit_code:-}" ]; then
