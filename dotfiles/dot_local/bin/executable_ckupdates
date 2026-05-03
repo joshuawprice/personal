@@ -5,6 +5,7 @@
 #   2: internet failure
 #   3: both repo and aur listing programs failed
 #   4: partial success; either repo or aur listing program failed
+#   5: programming error
 
 # saner programming env: these switches turn some bugs into errors
 # dash doesn't support pipefail
@@ -16,10 +17,46 @@ network_check() {
     set -o errexit
 }
 
-if ! command -v checkupdates >/dev/null; then
-    echo "${0##*/}: \`checkupdates\` not found" >&2
-    exit 1
-fi
+checkupdates_check() {
+    if  command -v checkupdates >/dev/null; then
+        echo "${0##*/}: \`checkupdates\` not found" >&2
+        exit 1
+    fi
+}
+
+flatpak_check() {
+    if ! command -v flatpak >/dev/null; then
+        echo "${0##*/}: \`flatpak\` not found" >&2
+        exit 1
+    fi
+}
+
+dependency_check() {
+    if [ $# -eq 0 ]; then
+        checkupdates_check
+        return
+    fi
+
+    case "$1" in
+        '-a')
+            checkupdates_check
+            flatpak_check
+            ;;
+        '-d')
+            checkupdates_check
+            ;;
+        '-f')
+            flatpak_check
+            ;;
+        *)
+            echo "${0##*/}: programming error: fallthrough case reached" >&2
+            exit 5
+            ;;
+    esac
+}
+
+# Early exit if we're missing programs.
+dependency_check "$@"
 
 if ! network_check asgard.jprice.uk \
     && ! network_check archlinux.org; then
