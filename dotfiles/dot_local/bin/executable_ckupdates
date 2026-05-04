@@ -5,7 +5,7 @@
 #   2: internet failure
 #   3: both repo and aur listing programs failed
 #   4: partial success; either repo or aur listing program failed
-#   5: programming error
+#   5: invalid arguments
 
 # saner programming env: these switches turn some bugs into errors
 # dash doesn't support pipefail
@@ -17,42 +17,41 @@ network_check() {
     set -o errexit
 }
 
-checkupdates_check() {
-    if  command -v checkupdates >/dev/null; then
-        echo "${0##*/}: \`checkupdates\` not found" >&2
-        exit 1
-    fi
-}
-
-flatpak_check() {
-    if ! command -v flatpak >/dev/null; then
-        echo "${0##*/}: \`flatpak\` not found" >&2
-        exit 1
+is_installed() {
+    if ! command -v "$1" >/dev/null; then
+        echo "${0##*/}: \`$1\` not found" >&2
+        return 1
     fi
 }
 
 dependency_check() {
     if [ $# -eq 0 ]; then
-        checkupdates_check
-        return
+        if is_installed checkupdates; then
+            return
+        else
+            exit 1
+        fi
     fi
 
     case "$1" in
         '-a')
-            checkupdates_check
-            flatpak_check
+            should_exit=0
+            is_installed checkupdates || should_exit=1
+            is_installed flatpak || should_exit=1
+            [ $should_exit -eq 1 ] && exit 1
             ;;
         '-d')
-            checkupdates_check
+            is_installed checkupdates || exit 1
             ;;
         '-f')
-            flatpak_check
+            is_installed flatpak || exit 1
             ;;
         *)
-            echo "${0##*/}: programming error: fallthrough case reached" >&2
+            echo "${0##*/}: invalid arguments" >&2
             exit 5
             ;;
     esac
+    return 0
 }
 
 # Early exit if we're missing programs.
