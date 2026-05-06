@@ -71,7 +71,9 @@ fi
 
 # Retrieve list of updates.
 echo "Checking for updates..." >&2
-repo_updates="$(checkupdates)" || checkupdates_exit_code=$?
+if [ $# -eq 0 ] || [ "$1" = '-a' ]; then
+    repo_updates="$(checkupdates)" || checkupdates_exit_code=$?
+fi
 
 if command -v paru >/dev/null; then
     aur_updates="$(paru --query --upgrades --aur --color=always)" || paru_exit_code=$?
@@ -97,11 +99,11 @@ elif [ -n "${paru_exit_code:-}" ]; then
 fi
 
 # Correctly concat repo and aur updates.
-if [ -n "$repo_updates" ] && [ -n "$aur_updates" ]; then
+if [ -n "${repo_updates:-}" ] && [ -n "$aur_updates" ]; then
     updates="$repo_updates
 $aur_updates"
 else
-    updates="$repo_updates$aur_updates"
+    updates="${repo_updates:-}$aur_updates"
 fi
 
 # Finally, print any updates.
