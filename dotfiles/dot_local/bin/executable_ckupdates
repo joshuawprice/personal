@@ -73,15 +73,14 @@ fi
 echo "Checking for updates..." >&2
 if [ $# -eq 0 ] || [ "$1" = '-a' ]; then
     repo_updates="$(checkupdates)" || checkupdates_exit_code=$?
-fi
 
-if command -v paru >/dev/null; then
-    aur_updates="$(paru --query --upgrades --aur --color=always)" || paru_exit_code=$?
-    # If aur_updates is empty grep will fail. Just ignore it.
-    aur_updates="$(printf "$aur_updates" | grep --invert-match '\[ignored\]' || :)"
-else
-    echo "\`paru\` not found, any aur updates cannot be listed" >&2
-    aur_updates=""
+    if command -v paru >/dev/null; then
+        aur_updates="$(paru --query --upgrades --aur --color=always)" || paru_exit_code=$?
+        # If aur_updates is empty grep will fail. Just ignore it.
+        aur_updates="$(printf "$aur_updates" | grep --invert-match '\[ignored\]' || :)"
+    else
+        echo "\`paru\` not found, any aur updates cannot be listed" >&2
+    fi
 fi
 
 # Deal with unpredicted failures.
@@ -99,11 +98,11 @@ elif [ -n "${paru_exit_code:-}" ]; then
 fi
 
 # Correctly concat repo and aur updates.
-if [ -n "${repo_updates:-}" ] && [ -n "$aur_updates" ]; then
+if [ -n "${repo_updates:-}" ] && [ -n "${aur_updates:-}" ]; then
     updates="$repo_updates
 $aur_updates"
 else
-    updates="${repo_updates:-}$aur_updates"
+    updates="${repo_updates:-}${aur_updates:-}"
 fi
 
 # Finally, print any updates.
