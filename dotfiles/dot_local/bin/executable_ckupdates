@@ -31,6 +31,9 @@ is_installed() {
 dependency_check() {
     if [ $# -eq 0 ]; then
         if is_installed checkupdates; then
+            if ! command -v paru >/dev/null; then
+                err "\`paru\` not found, aur updates will not be listed"
+            fi
             return
         else
             exit 1
@@ -41,6 +44,9 @@ dependency_check() {
         '-a')
             should_exit=0
             is_installed checkupdates || should_exit=1
+            if ! command -v paru >/dev/null; then
+                err "\`paru\` not found, aur updates will not be listed"
+            fi
             is_installed flatpak || should_exit=1
             [ $should_exit -eq 1 ] && exit 1
             ;;
@@ -82,8 +88,6 @@ if [ $# -eq 0 ] || [ "$1" = '-a' ]; then
         aur_updates="$(paru --query --upgrades --aur --color=always)" || paru_exit_code=$?
         # If aur_updates is empty grep will fail. Just ignore it.
         aur_updates="$(printf "$aur_updates" | grep --invert-match '\[ignored\]' || :)"
-    else
-        err "\`paru\` not found, aur updates cannot be listed"
     fi
 fi
 
