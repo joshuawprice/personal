@@ -83,27 +83,80 @@ if [ $# -eq 0 ] || [ "$1" = '-a' ]; then
     fi
 fi
 
-# Deal with unpredicted failures.
-if [ -n "${checkupdates_exit_code:-}" ] && [ -n "${paru_exit_code:-}" ]; then
-    echo "${0##*/}: both \`checkupdates\` and \`paru\` unexpectedly failed" >&2
-    echo "${0##*/}: \`checkupdates\` exited with code: $checkupdates_exit_code" >&2
-    echo "${0##*/}: \`paru\` exited with code: $paru_exit_code" >&2
-    exit 3
-elif [ -n "${checkupdates_exit_code:-}" ]; then
-    echo "${0##*/}: \`checkupdates\` unexpectedly failed with code: $checkupdates_exit_code" >&2
-    echo "${0##*/}: only showing aur updates" >&2
-elif [ -n "${paru_exit_code:-}" ]; then
-    echo "${0##*/}: \`paru\` unexpectedly failed with code: $paru_exit_code" >&2
-    echo "${0##*/}: only showing repo updates" >&2
+if [ $# -ge 1 ] && { [ "$1" = '-a' ] || [ "$1" = '-f' ]; }; then
+    # Give flatpak a tty so it autoformats its output.
+    flatpak_updates="$(script -qec "flatpak remote-ls --updates")" || flatpak_exit_code=$?
 fi
 
-# Correctly concat repo and aur updates.
+
+# Deal with unpredicted failures.
+if [ -n "${checkupdates_exit_code:-}" ] \
+    && [ -n "${paru_exit_code:-}" ] \
+    && [ -n "${flatpak_exit_code:-}" ]; then
+    echo "${0##*/}: checkupdates, paru, and flatpak all unexpectedly failed" >&2
+    echo "${0##*/}: \`checkupdates\` exited with code: $checkupdates_exit_code" >&2
+    echo "${0##*/}: \`paru\` exited with code: $paru_exit_code" >&2
+    echo "${0##*/}: \`flatpak\` exited with code: $flatpak_exit_code" >&2
+    exit 3
+elif [ -n "${checkupdates_exit_code:-}" ] && [ -n "${paru_exit_code:-}" ]; then
+    echo "${0##*/}: \`checkupdates\` and \`paru\` unexpectedly failed" >&2
+    echo "${0##*/}: \`checkupdates\` exited with code: $checkupdates_exit_code" >&2
+    echo "${0##*/}: \`paru\` exited with code: $paru_exit_code" >&2
+    if [ $# -eq 0 ]; then
+        exit 3
+    elif [ "${1:-}" = '-a' ]; then
+        echo "${0##*/}: only showing flatpak updates" >&2
+    fi
+elif [ -n "${paru_exit_code:-}" ] && [ -n "${flatpak_exit_code:-}" ]; then
+    echo "${0##*/}: \`paru\` and \`flatpak\` unexpectedly failed" >&2
+    echo "${0##*/}: \`paru\` exited with code: $paru_exit_code" >&2
+    echo "${0##*/}: \`flatpak\` exited with code: $flatpak_exit_code" >&2
+    echo "${0##*/}: only showing repo updates" >&2
+elif [ -n "${checkupdates_exit_code:-}" ] && [ -n "${flatpak_exit_code:-}" ]; then
+    echo "${0##*/}: \`checkupdates\` and \`flatpak\` unexpectedly failed" >&2
+    echo "${0##*/}: \`checkupdates\` exited with code: $checkupdates_exit_code" >&2
+    echo "${0##*/}: \`flatpak\` exited with code: $flatpak_exit_code" >&2
+    echo "${0##*/}: only showing aur updates" >&2
+elif [ -n "${checkupdates_exit_code:-}" ]; then
+    echo "${0##*/}: \`checkupdates\` unexpectedly failed with code: $checkupdates_exit_code" >&2
+    if [ $# -eq 0 ]; then
+        echo "${0##*/}: only showing aur updates" >&2
+    elif [ "${1:-}" = '-a' ]; then
+        echo "${0##*/}: only showing aur and flatpak updates" >&2
+    fi
+elif [ -n "${paru_exit_code:-}" ]; then
+    echo "${0##*/}: \`paru\` unexpectedly failed with code: $paru_exit_code" >&2
+    if [ $# -eq 0 ]; then
+        echo "${0##*/}: only showing repo updates" >&2
+    elif [ "${1:-}" = '-a' ]; then
+        echo "${0##*/}: only showing repo and flatpak updates" >&2
+    fi
+elif [ -n "${flatpak_exit_code:-}" ]; then
+    echo "${0##*/}: \`flatpak\` unexpectedly failed with code: $flatpak_exit_code" >&2
+    if [ "${1:-}" = '-f' ]; then
+        exit 3
+    elif [ "${1:-}" = '-a' ]; then
+        echo "${0##*/}: only showing repo and aur updates" >&2
+    fi
+fi
+
+
+# Concatenate update sources
 if [ -n "${repo_updates:-}" ] && [ -n "${aur_updates:-}" ]; then
     updates="$repo_updates
 $aur_updates"
 else
     updates="${repo_updates:-}${aur_updates:-}"
 fi
+
+if [ -n "$updates" ] && [ -n "${flatpak_updates:-}" ]; then
+    updates="$updates
+
+$flatpak_updates"
+else
+    updates="${updates:-}${flatpak_updates:-}"
+fi
+
 
 # Finally, print any updates.
 if [ -z "$updates" ]; then
@@ -112,12 +165,9 @@ else
     echo "$updates"
 fi
 
-# Print all updates if given -a flag
-if [ $# -ge 1 ] && [ "$1" = '-a' ]; then
-    flatpak remote-ls --updates
-fi
-
-if [ -n "${checkupdates_exit_code:-}" ] || [ -n "${paru_exit_code:-}" ]; then
+if [ -n "${checkupdates_exit_code:-}" ] \
+    || [ -n "${paru_exit_code:-}" ] \
+    || [ -n "${flatpak_exit_code:-}" ]; then
     exit 4
 fi
 
