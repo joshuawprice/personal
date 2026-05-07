@@ -11,6 +11,10 @@
 # dash doesn't support pipefail
 set -o errexit -o noclobber -o nounset
 
+err() {
+    echo "${0##*/}: $@" >&2
+}
+
 network_check() {
     set +o errexit
     ping -c 1 -W 2 "$1" >/dev/null
@@ -19,7 +23,7 @@ network_check() {
 
 is_installed() {
     if ! command -v "$1" >/dev/null; then
-        echo "${0##*/}: \`$1\` not found" >&2
+        err "\`$1\` not found"
         return 1
     fi
 }
@@ -47,7 +51,7 @@ dependency_check() {
             is_installed flatpak || exit 1
             ;;
         *)
-            echo "${0##*/}: invalid arguments" >&2
+            err "invalid arguments"
             exit 5
             ;;
     esac
@@ -59,7 +63,7 @@ dependency_check "$@"
 
 if ! network_check asgard.jprice.uk \
     && ! network_check archlinux.org; then
-    echo "${0##*/}: cannot reach internet" >&2
+    err "cannot reach internet"
     exit 2
 fi
 
@@ -79,7 +83,7 @@ if [ $# -eq 0 ] || [ "$1" = '-a' ]; then
         # If aur_updates is empty grep will fail. Just ignore it.
         aur_updates="$(printf "$aur_updates" | grep --invert-match '\[ignored\]' || :)"
     else
-        echo "\`paru\` not found, any aur updates cannot be listed" >&2
+        err "\`paru\` not found, aur updates cannot be listed"
     fi
 fi
 
@@ -93,50 +97,50 @@ fi
 if [ -n "${checkupdates_exit_code:-}" ] \
     && [ -n "${paru_exit_code:-}" ] \
     && [ -n "${flatpak_exit_code:-}" ]; then
-    echo "${0##*/}: checkupdates, paru, and flatpak all unexpectedly failed" >&2
-    echo "${0##*/}: \`checkupdates\` exited with code: $checkupdates_exit_code" >&2
-    echo "${0##*/}: \`paru\` exited with code: $paru_exit_code" >&2
-    echo "${0##*/}: \`flatpak\` exited with code: $flatpak_exit_code" >&2
+    err "checkupdates, paru, and flatpak all unexpectedly failed"
+    err "\`checkupdates\` exited with code: $checkupdates_exit_code"
+    err "\`paru\` exited with code: $paru_exit_code"
+    err "\`flatpak\` exited with code: $flatpak_exit_code"
     exit 3
 elif [ -n "${checkupdates_exit_code:-}" ] && [ -n "${paru_exit_code:-}" ]; then
-    echo "${0##*/}: \`checkupdates\` and \`paru\` unexpectedly failed" >&2
-    echo "${0##*/}: \`checkupdates\` exited with code: $checkupdates_exit_code" >&2
-    echo "${0##*/}: \`paru\` exited with code: $paru_exit_code" >&2
+    err "\`checkupdates\` and \`paru\` unexpectedly failed"
+    err "\`checkupdates\` exited with code: $checkupdates_exit_code"
+    err "\`paru\` exited with code: $paru_exit_code"
     if [ $# -eq 0 ]; then
         exit 3
     elif [ "${1:-}" = '-a' ]; then
-        echo "${0##*/}: only showing flatpak updates" >&2
+        err "only showing flatpak updates"
     fi
 elif [ -n "${paru_exit_code:-}" ] && [ -n "${flatpak_exit_code:-}" ]; then
-    echo "${0##*/}: \`paru\` and \`flatpak\` unexpectedly failed" >&2
-    echo "${0##*/}: \`paru\` exited with code: $paru_exit_code" >&2
-    echo "${0##*/}: \`flatpak\` exited with code: $flatpak_exit_code" >&2
-    echo "${0##*/}: only showing repo updates" >&2
+    err "\`paru\` and \`flatpak\` unexpectedly failed"
+    err "\`paru\` exited with code: $paru_exit_code"
+    err "\`flatpak\` exited with code: $flatpak_exit_code"
+    err "only showing repo updates"
 elif [ -n "${checkupdates_exit_code:-}" ] && [ -n "${flatpak_exit_code:-}" ]; then
-    echo "${0##*/}: \`checkupdates\` and \`flatpak\` unexpectedly failed" >&2
-    echo "${0##*/}: \`checkupdates\` exited with code: $checkupdates_exit_code" >&2
-    echo "${0##*/}: \`flatpak\` exited with code: $flatpak_exit_code" >&2
-    echo "${0##*/}: only showing aur updates" >&2
+    err "\`checkupdates\` and \`flatpak\` unexpectedly failed"
+    err "\`checkupdates\` exited with code: $checkupdates_exit_code"
+    err "\`flatpak\` exited with code: $flatpak_exit_code"
+    err "only showing aur updates"
 elif [ -n "${checkupdates_exit_code:-}" ]; then
-    echo "${0##*/}: \`checkupdates\` unexpectedly failed with code: $checkupdates_exit_code" >&2
+    err "\`checkupdates\` unexpectedly failed with code: $checkupdates_exit_code"
     if [ $# -eq 0 ]; then
-        echo "${0##*/}: only showing aur updates" >&2
+        err "only showing aur updates"
     elif [ "${1:-}" = '-a' ]; then
-        echo "${0##*/}: only showing aur and flatpak updates" >&2
+        err "only showing aur and flatpak updates"
     fi
 elif [ -n "${paru_exit_code:-}" ]; then
-    echo "${0##*/}: \`paru\` unexpectedly failed with code: $paru_exit_code" >&2
+    err "\`paru\` unexpectedly failed with code: $paru_exit_code"
     if [ $# -eq 0 ]; then
-        echo "${0##*/}: only showing repo updates" >&2
+        err "only showing repo updates"
     elif [ "${1:-}" = '-a' ]; then
-        echo "${0##*/}: only showing repo and flatpak updates" >&2
+        err "only showing repo and flatpak updates"
     fi
 elif [ -n "${flatpak_exit_code:-}" ]; then
-    echo "${0##*/}: \`flatpak\` unexpectedly failed with code: $flatpak_exit_code" >&2
+    err "\`flatpak\` unexpectedly failed with code: $flatpak_exit_code"
     if [ "${1:-}" = '-f' ]; then
         exit 3
     elif [ "${1:-}" = '-a' ]; then
-        echo "${0##*/}: only showing repo and aur updates" >&2
+        err "only showing repo and aur updates"
     fi
 fi
 
