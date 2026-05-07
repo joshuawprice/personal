@@ -29,38 +29,29 @@ is_installed() {
 }
 
 dependency_check() {
-    if [ $# -eq 0 ]; then
-        if is_installed checkupdates; then
-            if ! command -v paru >/dev/null; then
-                err "\`paru\` not found, aur updates will not be listed"
-            fi
-            return
-        else
-            exit 1
+    local should_exit=0
+    if [ $# -eq 0 ] || [ "$1" = '-a' ] || [ "$1" = '-d' ]; then
+        is_installed checkupdates || should_exit=1
+    fi
+
+    if [ $# -eq 0 ] || [ "$1" = '-a' ]; then
+        if ! command -v paru >/dev/null; then
+            err "\`paru\` not found. aur updates will not be listed"
         fi
     fi
 
-    case "$1" in
-        '-a')
-            should_exit=0
-            is_installed checkupdates || should_exit=1
-            if ! command -v paru >/dev/null; then
-                err "\`paru\` not found, aur updates will not be listed"
-            fi
-            is_installed flatpak || should_exit=1
-            [ $should_exit -eq 1 ] && exit 1
-            ;;
-        '-d')
-            is_installed checkupdates || exit 1
-            ;;
-        '-f')
-            is_installed flatpak || exit 1
-            ;;
-        *)
-            err "invalid arguments"
-            exit 5
-            ;;
-    esac
+    if [ $# -ge 1 ] && { [ "$1" = '-a' ] || [ "$1" = '-f' ]; }; then
+        is_installed flatpak || should_exit=1
+    fi
+
+    [ $should_exit -eq 1 ] && exit 1
+
+    if [ $# -ge 1 ] && ! { \
+        [ "$1" = '-a' ] || [ "$1" = '-d' ] || [ "$1" = '-f' ]; }; then
+        err "invalid arguments"
+        exit 5
+    fi
+
     return 0
 }
 
