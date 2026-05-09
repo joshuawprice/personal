@@ -97,7 +97,7 @@ fi
 if [ -n "${paru_pid:-}" ]; then
     wait "$paru_pid" || paru_exit_code=$?
     # If stdin is empty grep will fail, quitting the script. Just ignore it.
-    aur_updates="$(cat "$tmpdir/paru.out" | grep --invert-match '\[ignored\]' || :)"
+    aur_updates="$(grep --invert-match '\[ignored\]' "$tmpdir/paru.out" || :)"
 fi
 
 if [ -n "${flatpak_pid:-}" ]; then
