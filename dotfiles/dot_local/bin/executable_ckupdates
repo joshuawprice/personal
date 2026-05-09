@@ -70,21 +70,41 @@ if [ $# -ge 1 ] && [ "$1" = '-d' ]; then
         exit 0
 fi
 
+
 # Retrieve list of updates.
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT INT TERM
 echo "Checking for updates..." >&2
 if [ $# -eq 0 ] || [ "$1" = '-a' ]; then
-    repo_updates="$(checkupdates)" || checkupdates_exit_code=$?
+    checkupdates > "$tmpdir/checkupdates.out" &
+    checkupdates_pid=$!
 
     if command -v paru >/dev/null; then
-        aur_updates="$(paru --query --upgrades --aur --color=always)" || paru_exit_code=$?
-        # If aur_updates is empty grep will fail. Just ignore it.
-        aur_updates="$(printf "$aur_updates" | grep --invert-match '\[ignored\]' || :)"
+        paru --query --upgrades --aur --color=always >"$tmpdir/paru.out" &
+        paru_pid=$!
     fi
 fi
 
 if [ $# -ge 1 ] && { [ "$1" = '-a' ] || [ "$1" = '-f' ]; }; then
     # Give flatpak a tty so it autoformats its output.
-    flatpak_updates="$(script -qec "flatpak remote-ls --updates")" || flatpak_exit_code=$?
+    script -qec "flatpak remote-ls --updates" > "$tmpdir/flatpak.out" &
+    flatpak_pid=$!
+fi
+
+if [ -n "${checkupdates_pid:-}" ]; then
+    wait "$checkupdates_pid" || checkupdates_exit_code=$?
+    repo_updates="$(cat "$tmpdir/checkupdates.out")"
+fi
+
+if [ -n "${paru_pid:-}" ]; then
+    wait "$paru_pid" || paru_exit_code=$?
+    # If stdin is empty grep will fail, quitting the script. Just ignore it.
+    aur_updates="$(cat "$tmpdir/paru.out" | grep --invert-match '\[ignored\]' || :)"
+fi
+
+if [ -n "${flatpak_pid:-}" ]; then
+    wait "$flatpak_pid" || flatpak_exit_code=$?
+    flatpak_updates="$(cat "$tmpdir/flatpak.out")"
 fi
 
 
