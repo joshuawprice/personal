@@ -1,4 +1,6 @@
 import asyncio
+from collections.abc import Callable
+from functools import wraps
 import json
 import logging
 from pathlib import Path
@@ -138,8 +140,43 @@ class Mumble(commands.Cog):
             self.users.append(user)
             await ctx.message.add_reaction("🔔")
 
+    # To be used with care. The current implementation can't make
+    # distinctions, so under loads of even just a few RPS things will
+    # slow to a crawl.
+    def sequential(func: Callable) -> Callable:
+        queue = asyncio.Queue()
+
+        async def worker() -> None:
+            while True:
+                coro, future = await queue.get()
+                try:
+                    result = await coro
+                    future.set_result(result)
+                except Exception as e:
+                    future.set_exception(e)
+                finally:
+                    queue.task_done()
+
+        task = None
+
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            nonlocal task
+            loop = asyncio.get_event_loop()
+
+            # Start the worker once
+            if task is None or task.done():
+                task = asyncio.create_task(worker())
+
+            future = loop.create_future()
+            await queue.put((func(*args, **kwargs), future))
+            return await future
+
+        return wrapper
+
     @client.on_server_event(ServerEventType.USER_CONNECT)
     @client.on_server_event(ServerEventType.USER_DISCONNECT)
+    @sequential
     async def _update_channel_status(
         self,
         event: UserEvent,
@@ -158,6 +195,7 @@ class Mumble(commands.Cog):
 
     @client.on_server_event(ServerEventType.USER_CONNECT)
     @client.on_server_event(ServerEventType.USER_DISCONNECT)
+    @sequential
     async def _manage_voice_connection(
         self,
         event: UserEvent,
