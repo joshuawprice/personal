@@ -106,6 +106,7 @@ class Client(ABC):
     async def _invoke_callbacks(
         self, event: ServerEvent, last_user_count: int, user_count: int
     ) -> None:
+        logger.info(f"Handling {event.type}")
         results = await asyncio.gather(
             *(
                 f(event, last_user_count, user_count)

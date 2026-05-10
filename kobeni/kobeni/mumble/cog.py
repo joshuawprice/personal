@@ -150,8 +150,11 @@ class Mumble(commands.Cog):
         channel = self.bot.get_channel(self.voice_channel_id)
         pluralised_user_string = "user" if user_count == 1 else "users"
 
-        logger.info(f"Updating status of {channel.name} in {channel.guild.name}")
-        await channel.edit(status=f"{user_count} {pluralised_user_string} on Mumble")
+        status = f"{user_count} {pluralised_user_string} on Mumble"
+        await channel.edit(status=status)
+        logger.info(
+            f"Set status of {channel.name} in {channel.guild.name} to: {status}"
+        )
 
     @client.on_server_event(ServerEventType.USER_CONNECT)
     @client.on_server_event(ServerEventType.USER_DISCONNECT)
