@@ -91,6 +91,10 @@ resource "aws_instance" "asgard" {
   tags = {
     Name = "asgard"
   }
+
+  lifecycle {
+    ignore_changes = [ami]
+  }
 }
 
 #resource "aws_ec2_instance_state" "stop_asgard" {
