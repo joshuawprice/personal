@@ -93,7 +93,8 @@ resource "aws_instance" "asgard" {
   }
 
   lifecycle {
-    ignore_changes = [ami]
+    ignore_changes  = [ami]
+    prevent_destroy = true
   }
 }
 
