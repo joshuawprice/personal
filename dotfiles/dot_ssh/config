@@ -19,7 +19,7 @@ Host muspelheim
 #    ProxyJump asgard
     Hostname muspelheim.bifrost
 
-Host nidavellir
+Host nidavellir nidavellir.jprice.uk
     Hostname nidavellir.jprice.uk
     Port 122
 
