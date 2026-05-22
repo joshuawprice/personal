@@ -8,7 +8,6 @@ Host asgard*
     User admin
 
 Host asgard
-    SendEnv TERM xterm-256color
     Hostname asgard.jprice.uk
 
 Host yggdrasil
