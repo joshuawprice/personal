@@ -85,7 +85,7 @@ fi
 
 if [ $# -ge 1 ] && { [ "$1" = '-a' ] || [ "$1" = '-f' ]; }; then
     # Give flatpak a tty so it autoformats its output.
-    script -qec "flatpak remote-ls --updates" > "$tmpdir/flatpak.out" &
+    script -qec "flatpak remote-ls --updates" --log-out /dev/null > "$tmpdir/flatpak.out" &
     flatpak_pid=$!
 fi
 
