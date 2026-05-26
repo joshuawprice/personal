@@ -116,11 +116,18 @@ class Mumble(commands.Cog):
         if before.channel is None:
             return
 
+        # Fix for random status disappearances:
+        # When discord.py handles "WebSocket closed with 1006" the bot
+        # briefly disconnects, reconnects, then catches up on the events
+        # it missed. Because kobeni has already reconnected by the time
+        # its disconnect event is replayed, when we check the member
+        # list it will contain kobeni, and thus we will incorrectly
+        # count the length of the member list as one higher than we
+        # should.
+        members = [m for m in before.channel.members if m != member]
+
         # When last user leaves the voice channel, the status disappears.
-        if (
-            before.channel.id == self.voice_channel_id
-            and len(before.channel.members) == 0
-        ):
+        if before.channel.id == self.voice_channel_id and len(members) == 0:
             logger.info("Resetting discord channel status as last user has left")
             await self._update_channel_status(
                 UserEvent(None), 0, self.mumble_client.user_count
