@@ -195,10 +195,10 @@ class Mumble(commands.Cog):
         pluralised_user_string = "user" if user_count == 1 else "users"
 
         status = f"{user_count} {pluralised_user_string} on Mumble"
-        await channel.edit(status=status)
         logger.info(
-            f"Set status of {channel.name} in {channel.guild.name} to: {status}"
+            f"Setting status of {channel.name} in {channel.guild.name} to: {status}"
         )
+        await channel.edit(status=status)
 
     @client.on_server_event(ServerEventType.USER_CONNECT)
     @client.on_server_event(ServerEventType.USER_DISCONNECT)
