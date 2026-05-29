@@ -128,7 +128,7 @@ class Mumble(commands.Cog):
 
         # When last user leaves the voice channel, the status disappears.
         if before.channel.id == self.voice_channel_id and len(members) == 0:
-            logger.info("Resetting discord channel status as last user has left")
+            logger.info("Resetting channel status as last discord user has left")
             await self._update_channel_status(
                 UserEvent(None), 0, self.mumble_client.user_count
             )
