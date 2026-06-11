@@ -8,7 +8,7 @@ sources := $(wildcard parts/*.ly)
 .PHONY: parts
 parts: $(sources:parts/%.ly=out/$(piece)-%.pdf)
 
-out:; mkdir out
+out:; mkdir -p out
 
 out/$(piece)-%.pdf out/$(piece)-%.midi: parts/%.ly globals.ily | out
 	lilypond $(LILYFLAGS) -o $(basename $@) $<
