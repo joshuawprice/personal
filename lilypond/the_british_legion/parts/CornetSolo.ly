@@ -58,7 +58,7 @@ cornetOne = \relative c'' {
     }
     {
       d8->[ r a->] d->[ r a->] |
-      d8-> r d \repeat tremolo 3 d | \mark \default
+      d8-> r d \repeat tremolo 3 d | \section \mark \default
     }
   }
   \mBreak
