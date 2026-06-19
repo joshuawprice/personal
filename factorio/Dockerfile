@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y curl ca-certifi
     && curl -LO https://factorio.com/get-download/stable/headless/linux64 \
     && xz -d < linux64 | tar -x
 
+COPY mod-list.json /build/factorio/mods/
+
 
 FROM debian:13-slim
 
