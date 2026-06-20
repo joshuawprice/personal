@@ -1,0 +1,13 @@
+services:
+  factorio:
+    build: .
+    image: factorio:latest
+    container_name: factorio
+    ports:
+      - "34197:34197/udp"
+    volumes:
+      - "factorio-data:/data"
+
+volumes:
+  factorio-data:
+    name: "factorio-data"
