@@ -10,6 +10,12 @@ if [ $# -ge 1 ]; then
     exec $FACTORIO_BIN "$@"
 fi
 
-exec $FACTORIO_BIN --start-server /data/world.zip
+# Optionally enable whitelist if file exists.
+if [ -f "/config/server-whitelist.json" ]; then
+    echo "Whitelist file found. Enabling whitelist."
+    FLAGS="$FLAGS --use-server-whitelist --server-whitelist /config/server-whitelist.json"
+fi
+
+exec $FACTORIO_BIN --start-server /data/world.zip $FLAGS
 
 # vim: sts=4 sw=4 et
