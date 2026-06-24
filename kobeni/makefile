@@ -6,6 +6,13 @@ build:
 arm:
 	docker build -t kobeni:arm64 --platform=arm64 .
 
+.PHONY: deploy
+deploy: arm
+	docker save kobeni:arm64 \
+		| zstd -19 \
+		| pv \
+		| ssh asgard "zstd -cd | docker load && docker compose up -d"
+
 .PHONY: run
 run: build
 	docker run --env-file=.env --network=host kobeni
