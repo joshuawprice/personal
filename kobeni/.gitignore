@@ -19,3 +19,6 @@ MumbleUDP_pb2.py
 config
 
 kobeni/mumble/MumbleServer
+
+# Bind mount for mumble server
+/mumble
