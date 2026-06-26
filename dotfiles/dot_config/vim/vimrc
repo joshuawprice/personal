@@ -6,6 +6,9 @@ set number "set relativenumber
 set relativenumber "set relativenumber
 set ignorecase " ignore upper/lower case when searching
 
+" I don't use double spaces after full stops. Don't insert them when using J.
+set nojoinspaces
+
 autocmd FileType text setlocal textwidth=78
 
 if $USER == 'root'
