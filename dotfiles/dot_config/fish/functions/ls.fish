@@ -1,6 +1,6 @@
 if command -v eza >/dev/null
     function ls --wraps eza
-        command eza --icons $argv
+        command eza --icons auto $argv
     end
 else
     function ls --wraps ls
