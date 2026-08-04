@@ -15,14 +15,17 @@ ENV UV_LINK_MODE=copy
 # across both images.
 ENV UV_PYTHON_DOWNLOADS=0
 
+# Omit development dependencies
+ENV UV_NO_DEV=1
+
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project --no-dev --no-editable
+    uv sync --locked --no-install-project --no-editable
 COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev --no-editable
+    uv sync --locked --no-editable
 
 
 FROM python:3.14-slim-trixie
