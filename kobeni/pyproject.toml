@@ -12,7 +12,7 @@ dependencies = [
     "python-dotenv~=1.2",
     # Ice guarantees source code compatibility for most recent version, and
     # 3.8 is already newer than the MumbleServer.ice as of time of writing.
-    "zeroc-ice==3.8.1",
+    "zeroc-ice==3.8.2",
 ]
 
 [project.scripts]
@@ -24,7 +24,7 @@ requires = [
     "protobuf~=7.34",
     # The version specified here is not bound by the uv.lock file, so the
     # version here must match the version in dependencies above exactly.
-    "zeroc-ice==3.8.1",
+    "zeroc-ice==3.8.2",
 ]
 build-backend = "hatchling.build"
 
