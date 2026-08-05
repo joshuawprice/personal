@@ -367,7 +367,7 @@ requires-dist = [
     { name = "protobuf", specifier = "~=7.34" },
     { name = "pynacl", specifier = "~=1.6" },
     { name = "python-dotenv", specifier = "~=1.2" },
-    { name = "zeroc-ice", specifier = "~=3.8.0,<3.9" },
+    { name = "zeroc-ice", specifier = "==3.8.1" },
 ]
 
 [[package]]
