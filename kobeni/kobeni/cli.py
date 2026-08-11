@@ -12,6 +12,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from kobeni.mumble import Mumble
+from kobeni.minecraft import Minecraft
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ class Bot(commands.Bot):
         )
 
         await self.add_cog(Mumble(self))
+        await self.add_cog(Minecraft(self))
 
     async def on_ready(self):
         logger.info(f"We have logged in as {self.user}")
