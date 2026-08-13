@@ -141,7 +141,7 @@ class Minecraft(commands.Cog):
     ) -> None:
         """Update Discord channel status with current user count."""
         channel = self.bot.get_channel(self.voice_channel_id)
-        pluralised_user_string = "user" if user_count == 1 else "users"
+        pluralised_user_string = "player" if user_count == 1 else "players"
 
         status = f"{user_count} {pluralised_user_string} on Minecraft"
         logger.info(
