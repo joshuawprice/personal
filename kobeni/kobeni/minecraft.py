@@ -96,6 +96,28 @@ class Minecraft(commands.Cog):
         general_voice_channel = self.bot.get_channel(self.voice_channel_id)
         await general_voice_channel.edit(status=None)
 
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if before.channel is None:
+            return
+
+        # Fix for random status disappearances:
+        # When discord.py handles "WebSocket closed with 1006" the bot
+        # briefly disconnects, reconnects, then catches up on the events
+        # it missed. Because kobeni has already reconnected by the time
+        # its disconnect event is replayed, when we check the member
+        # list it will contain kobeni, and thus we will incorrectly
+        # count the length of the member list as one higher than we
+        # should.
+        members = [m for m in before.channel.members if m != member]
+
+        # When last user leaves the voice channel, the status disappears.
+        if before.channel.id == self.voice_channel_id and len(members) == 0:
+            logger.info("Resetting channel status as last discord user has left")
+            await self._update_channel_status(
+                UserEvent(None), 0, self.minecraft_client.user_count
+            )
+
     @client.on_server_event(ServerEventType.USER_CONNECT)
     @client.on_server_event(ServerEventType.USER_DISCONNECT)
     @utils.sequential
