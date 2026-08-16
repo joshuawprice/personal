@@ -15,7 +15,7 @@ if $USER == 'root'
 	" For some security.
 	set noloadplugins
 
-	let user_vim = expand('~' . $SUDO_USER . '/.vim')
+	let user_vim = expand('~' . $SUDO_USER . '/.config/vim')
 	if isdirectory(user_vim)
 		" root sources this vimrc, but can't find my custom theme without this.
 		execute 'set runtimepath+=' . user_vim
