@@ -10,6 +10,9 @@
 [pull]
 	rebase = true
 
+[merge]
+	tool = vimdiff
+
 # The below settings are from:
 # https://blog.gitbutler.com/how-git-core-devs-configure-git/
 
