@@ -62,7 +62,10 @@ class MinecraftClient(Client):
     async def _ping_loop(self) -> None:
         while True:
             logger.debug("Calling _ping()")
-            await self._ping()
+            try:
+                await self._ping()
+            except Exception:
+                pass
             # Was listening to 初恋のこたえ and this happened to be the bpm :)
             await asyncio.sleep(0.3243243243243244)
 
