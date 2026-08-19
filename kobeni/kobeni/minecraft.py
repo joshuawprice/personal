@@ -139,3 +139,24 @@ class Minecraft(commands.Cog):
             f"Setting status of {channel.name} in {channel.guild.name} to: {status}"
         )
         await channel.edit(status=status)
+
+    @client.on_server_event(ServerEventType.USER_CONNECT)
+    @client.on_server_event(ServerEventType.USER_DISCONNECT)
+    @utils.sequential
+    async def _manage_voice_connection(
+        self,
+        event: UserEvent,
+        last_user_count: int,
+        user_count: int,
+    ) -> None:
+        """Connect or disconnect voice client based on user count."""
+        channel = self.bot.get_channel(self.voice_channel_id)
+        guild = channel.guild
+        voice_client = guild.voice_client
+
+        if user_count > 0 and voice_client is None:
+            logger.info(f"Connecting to {channel.name} in {guild.name}")
+            await channel.connect(self_mute=True, self_deaf=True)
+        elif user_count == 0 and voice_client is not None:
+            logger.info(f"Disconnecting from {channel.name} in {guild.name}")
+            await voice_client.disconnect()
