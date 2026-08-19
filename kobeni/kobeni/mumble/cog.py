@@ -1,23 +1,22 @@
 import asyncio
 import json
 import logging
-from pathlib import Path
 import os
 import time
+from pathlib import Path
 
 import discord
 from discord.ext import commands
 
 from kobeni import utils
 from kobeni.mumble import client
-from kobeni.mumble.rpc_client import RpcClient
 from kobeni.mumble.client import (
     ServerEventType,
-    UserEvent,
     UserConnectEvent,
     UserDisconnectEvent,
+    UserEvent,
 )
-
+from kobeni.mumble.rpc_client import RpcClient
 
 logger: logging.Logger = logging.getLogger(__name__)
 

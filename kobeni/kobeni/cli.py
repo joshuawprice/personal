@@ -11,8 +11,8 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from kobeni.mumble import Mumble
 from kobeni.minecraft import Minecraft
+from kobeni.mumble import Mumble
 
 logger = logging.getLogger(__name__)
 

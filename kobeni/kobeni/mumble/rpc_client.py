@@ -8,12 +8,11 @@ import Ice
 # The MumbleServer module uses absolute imports for sibling modules.
 sys.path.insert(0, os.path.dirname(__file__))
 import MumbleServer
-
 from kobeni.mumble.client import (
     Client,
+    ServerEvent,
     ServerEventType,
     User,
-    ServerEvent,
     UserConnectEvent,
     UserDisconnectEvent,
 )
