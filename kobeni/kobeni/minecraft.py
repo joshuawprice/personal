@@ -60,12 +60,21 @@ class MinecraftClient(Client):
             )
 
     async def _ping_loop(self) -> None:
+        # Only log exception on first failure. No need to pollute the logs.
+        did_last_loop_succeed = False
+
         while True:
             logger.debug("Calling _ping()")
             try:
                 await self._ping()
+                did_last_loop_succeed = True
             except Exception:
-                pass
+                if not did_last_loop_succeed:
+                    continue
+
+                logger.exception("Ping failed, continuing")
+                did_last_loop_succeed = False
+
             # Was listening to 初恋のこたえ and this happened to be the bpm :)
             await asyncio.sleep(0.3243243243243244)
 
