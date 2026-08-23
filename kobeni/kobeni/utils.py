@@ -17,7 +17,7 @@ def sequential(func: Callable) -> Callable:
             try:
                 result = await coro
                 future.set_result(result)
-            except Exception as e:
+            except Exception as e: # noqa: BLE001 - must forward coroutine failure
                 future.set_exception(e)
             finally:
                 queue.task_done()
