@@ -7,7 +7,11 @@ authors = [
     { name = "Joshua Price", email = "git@jprice.uk" }
 ]
 requires-python = ">=3.13"
-dependencies = ["fastapi", "uvicorn", "requests"]
+dependencies = [
+    "fastapi",
+    "httpx>=0.28.1",
+    "uvicorn",
+]
 
 [project.scripts]
 uni-calendar = "uni_calendar:main"
