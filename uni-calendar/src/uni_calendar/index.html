@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>My Timetable</title>
+    <style>
+        :root {
+            --bg: #f5f6fa;
+            --card: #fff;
+            --fg: #1d2230;
+            --mute: #6b7280;
+            --acc: #2563eb;
+            --bd: #e3e6ee
+        }
+
+        @media(prefers-color-scheme:dark) {
+            :root {
+                --bg: #12141a;
+                --card: #1c1f28;
+                --fg: #e6e8ee;
+                --mute: #9aa1b0;
+                --acc: #6ea0ff;
+                --bd: #2c303c
+            }
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font: 15px/1.45 system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--fg)
+        }
+
+        main {
+            max-width: 860px;
+            margin: auto;
+            padding: 16px
+        }
+
+        .bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: end;
+            margin-bottom: 16px
+        }
+
+        .bar label {
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+            color: var(--mute)
+        }
+
+        input,
+        select,
+        button {
+            font: inherit;
+            padding: 6px 8px;
+            border: 1px solid var(--bd);
+            border-radius: 6px;
+            background: var(--card);
+            color: var(--fg)
+        }
+
+        button {
+            background: var(--acc);
+            color: #fff;
+            border: 0;
+            cursor: pointer
+        }
+
+        h2 {
+            margin: 22px 0 8px;
+            font-size: 16px;
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            padding: 4px 0
+        }
+
+        h2.today {
+            color: var(--acc)
+        }
+
+        .ev {
+            display: flex;
+            gap: 12px;
+            background: var(--card);
+            border: 1px solid var(--bd);
+            border-left: 4px solid var(--c, var(--acc));
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px
+        }
+
+        .time {
+            min-width: 96px;
+            font-variant-numeric: tabular-nums;
+            color: var(--mute)
+        }
+
+        .subj {
+            font-weight: 600
+        }
+
+        .meta {
+            color: var(--mute);
+            font-size: 13px
+        }
+
+        .body {
+            font-size: 13px;
+            margin-top: 4px;
+            white-space: pre-line
+        }
+
+        .tag {
+            font-size: 11px;
+            border: 1px solid var(--bd);
+            border-radius: 99px;
+            padding: 0 8px;
+            margin-left: 6px
+        }
+
+        a {
+            color: var(--acc)
+        }
+
+        #status {
+            color: var(--mute);
+            margin: 8px 0
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>My Timetable</h1>
+        <div class="bar">
+            <label>From<input type="date" id="from"></label>
+            <label>To<input type="date" id="to"></label>
+            <label>Module<select id="mod">
+                    <option value="">All</option>
+                </select></label>
+            <label>Search<input id="q" placeholder="text…"></label>
+            <button id="go">Load</button>
+        </div>
+        <div id="status"></div>
+        <div id="list"></div>
+    </main>
+    <script>
+        const $ = id => document.getElementById(id);
+        const dayKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+        const COLORS = ["#2563eb", "#16a34a", "#d97706", "#db2777", "#7c3aed", "#0891b2"];
+        let items = [];
+
+        // default range: this week's Monday -> +6 weeks (local dates)
+        const now = new Date(), mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+        const end = new Date(mon); end.setDate(mon.getDate() + 42);
+        $("from").value = dayKey(mon); $("to").value = dayKey(end);
+
+        const tFmt = new Intl.DateTimeFormat([], { hour: "2-digit", minute: "2-digit" });
+        const dFmt = new Intl.DateTimeFormat([], { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+        // Keep only text, <br>, and mailto links from the API's HTML body
+        function clean(html) {
+            const doc = new DOMParser().parseFromString(html || "", "text/html"), out = document.createDocumentFragment();
+            (function walk(n, p) {
+                n.childNodes.forEach(c => {
+                    if (c.nodeType === 3) p.append(c.textContent);
+                    else if (c.nodeName === "BR") p.append(document.createElement("br"));
+                    else if (c.nodeName === "A" && /^mailto:/i.test(c.getAttribute("href") || "")) {
+                        const a = document.createElement("a"); a.href = c.getAttribute("href"); a.textContent = c.textContent; p.append(a);
+                    } else walk(c, p);
+                });
+            })(doc.body, out);
+            return out;
+        }
+        const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
+
+        async function load() {
+            $("status").textContent = "Loading…";
+            const s = $("from").value + "T00:00:00Z", e = $("to").value + "T00:00:00Z";
+            try {
+                const r = await fetch(`/api/calendar?start=${s}&end=${e}`);
+                if (!r.ok) throw new Error(r.status + " " + await r.text());
+                const data = await r.json();
+                items = (data.results || []).map(i => ({ ...i, s: new Date(i.Start), e: new Date(i.End) })).sort((a, b) => a.s - b.s);
+                const mods = [...new Set(items.map(i => i.Subject))].sort(), cur = $("mod").value;
+                $("mod").replaceChildren(new Option("All", ""), ...mods.map(m => new Option(m, m)));
+                $("mod").value = mods.includes(cur) ? cur : "";
+                render();
+            } catch (err) { $("status").textContent = "Error: " + err.message; }
+        }
+
+        function render() {
+            const m = $("mod").value, q = $("q").value.toLowerCase();
+            const rows = items.filter(i => (!m || i.Subject === m) && (!q || JSON.stringify(i).toLowerCase().includes(q)));
+            const colors = {};[...new Set(items.map(i => i.Subject))].sort().forEach((s, k) => colors[s] = COLORS[k % COLORS.length]);
+            const list = $("list"); list.replaceChildren();
+            $("status").textContent = `${rows.length} event(s)`;
+            const today = dayKey(new Date()); let last = "";
+            for (const i of rows) {
+                const k = dayKey(i.s);
+                if (k !== last) { last = k; list.append(el("h2", k === today ? "today" : "", dFmt.format(i.s) + (k === today ? " (today)" : ""))); }
+                const ev = el("div", "ev"); ev.style.setProperty("--c", colors[i.Subject]);
+                ev.append(el("div", "time", `${tFmt.format(i.s)} – ${tFmt.format(i.e)}`));
+                const d = el("div");
+                const t = el("div", "subj", i.Subject);
+                (i.Categories || []).forEach(c => t.append(el("span", "tag", c)));
+                d.append(t, el("div", "meta", "📍 " + (i.Location || "—")));
+                const b = el("div", "body"); b.append(clean(i.Body)); d.append(b);
+                ev.append(d); list.append(ev);
+            }
+        }
+        $("go").onclick = load; $("mod").onchange = render; $("q").oninput = render;
+        load();
+    </script>
+</body>
+
+</html>
