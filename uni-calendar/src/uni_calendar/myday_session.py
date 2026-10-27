@@ -110,24 +110,6 @@ class MydaySession:
         return r.json()
 
 
-async def main():
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
-    )
-    async with (
-        httpx.AsyncClient(timeout=30) as client,
-        MydaySession(
-            client,
-            session_id=os.environ["MYDAY_SESSION_ID"],
-            id_token=os.environ["MYDAY_ID_TOKEN"],
-            device_code=os.environ["MYDAY_DEVICE_CODE"],
-        ) as session,
-    ):
-        items = await session.get_calendar()
-        log.info("calendar: %s", items)
-        await asyncio.Event().wait()  # keep session alive; Ctrl+C to stop
-
-
 if __name__ == "__main__":
     try:
         asyncio.run(main())
