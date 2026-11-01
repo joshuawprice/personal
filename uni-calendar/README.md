@@ -4,3 +4,4 @@ Todo:
 - [ ] Caching
 - [ ] Getting key
 - [ ] System calendar (ics, remote?)
+- [ ] Tokens expire at 0 seconds, meaning a calendar request may fail

@@ -13,7 +13,7 @@ CLIENT_ID = "myday-web-4e0f11f9-046e-4505-9cb8-db2152311e21"
 
 EXTEND_EVERY_N_RENEWALS = 4
 TOKEN_MARGIN_SECS = 60
-MAX_BACKOFF_SECS = 300
+MAX_BACKOFF_SECS = 3600 * 12
 
 log = logging.getLogger("myday")
 
