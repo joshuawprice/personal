@@ -69,13 +69,13 @@ async def fetch_items(start: str, end: str) -> bytes:
     client: httpx2.AsyncClient = app.state.client
     session: MydaySession = app.state.session
 
-    access_code = session.access_code
-    if not access_code:
+    access_token = session.access_token
+    if not access_token:
         raise httpx2.HTTPError("MyDay session has no access code")
 
     response = await client.get(
         url,
-        headers={"Authorization": f"Bearer {access_code}"},
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
 
