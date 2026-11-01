@@ -16,10 +16,15 @@ from zoneinfo import ZoneInfo
 
 import httpx2
 import uvicorn
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
+
+import hashlib
+from collections import Counter
+from fastapi.responses import HTMLResponse, Response  # extend existing import
+
 
 from .myday_session import MydaySession
 
@@ -65,7 +70,6 @@ class Event:
     location: str
     categories: tuple[str, ...]
     body: Markup  # sanitised HTML
-    search_text: str  # lower-cased text used by the search box
 
     @property
     def local_start(self) -> datetime:
@@ -137,7 +141,6 @@ def parse_ts(value: str) -> datetime:
         s = s[:-1] + "+00:00"
     dt = datetime.fromisoformat(s)
     if dt.tzinfo is None:
-        # Matches the old browser behaviour: offset-less times are local.
         dt = dt.replace(tzinfo=LOCAL_TZ)
     return dt.astimezone(timezone.utc)
 
@@ -169,7 +172,6 @@ class _BodySanitizer(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.html: list[str] = []
-        self.text: list[str] = []
         self._links: list[bool] = []  # stack: was this <a> emitted?
         self._skip = 0
 
@@ -178,7 +180,6 @@ class _BodySanitizer(HTMLParser):
             self._skip += 1
         elif tag == "br":
             self.html.append("<br>")
-            self.text.append(" ")
         elif tag == "a":
             href = (dict(attrs).get("href") or "").strip()
             keep = href.lower().startswith("mailto:")
@@ -196,15 +197,14 @@ class _BodySanitizer(HTMLParser):
     def handle_data(self, data):
         if not self._skip:
             self.html.append(html.escape(data))
-            self.text.append(data)
 
-    def result(self) -> tuple[Markup, str]:
+    def result(self) -> Markup:
         self.html.extend("</a>" for keep in self._links if keep)
         self._links.clear()
-        return Markup("".join(self.html).strip()), " ".join("".join(self.text).split())
+        return Markup("".join(self.html).strip())
 
 
-def sanitize_body(raw: str | None) -> tuple[Markup, str]:
+def sanitize_body(raw: str | None) -> Markup:
     parser = _BodySanitizer()
     parser.feed(raw or "")
     parser.close()
@@ -226,22 +226,14 @@ def parse_events(payload: bytes) -> list[Event]:
             log.warning("Skipping item with bad Start/End: %r", item.get("Subject"))
             continue
 
-        subject = str(item.get("Subject") or "(no title)")
-        location = str(item.get("Location") or "")
-        categories = tuple(str(c) for c in (item.get("Categories") or []))
-        body, body_text = sanitize_body(item.get("Body"))
-
         events.append(
             Event(
                 start=start,
                 end=end,
-                subject=subject,
-                location=location,
-                categories=categories,
-                body=body,
-                search_text=" ".join(
-                    [subject, location, *categories, body_text]
-                ).lower(),
+                subject=str(item.get("Subject") or "(no title)"),
+                location=str(item.get("Location") or ""),
+                categories=tuple(str(c) for c in (item.get("Categories") or [])),
+                body=sanitize_body(item.get("Body")),
             )
         )
 
@@ -363,11 +355,8 @@ NO_CACHE = {"Cache-Control": "no-cache"}
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(
-    module: str = Query("", max_length=200),
-    q: str = Query("", max_length=200),
-):
-    # Only filters are accepted; the time range is always chosen by the server.
+async def index():
+    # No parameters: every visitor gets the same server-chosen timetable.
     template = TEMPLATES.get_template("index.html")
     now = datetime.now(LOCAL_TZ)
 
@@ -376,9 +365,6 @@ async def index(
             loaded=False,
             error=_cache.last_error,
             refresh_seconds=60,
-            module="",
-            q=q,
-            modules=[],
             days=[],
         )
         return HTMLResponse(page, status_code=503, headers=NO_CACHE)
@@ -391,20 +377,9 @@ async def index(
     show_from = max(_cache.window_start, desired_start)
     visible = [e for e in _cache.events if e.end > show_from]
 
-    modules = sorted({e.subject for e in visible})
-    if module not in modules:
-        module = ""
-    needle = q.strip().lower()
-    rows = [
-        e
-        for e in visible
-        if (not module or e.subject == module)
-        and (not needle or needle in e.search_text)
-    ]
-
     today, tomorrow = now.date(), now.date() + timedelta(days=1)
     days: list[dict] = []
-    for e in rows:
+    for e in visible:
         d = e.local_start.date()
         if not days or days[-1]["date"] != d:
             suffix = (
@@ -442,10 +417,7 @@ async def index(
     page = template.render(
         loaded=True,
         refresh_seconds=refresh,
-        modules=modules,
-        module=module,
-        q=q,
-        count=len(rows),
+        count=len(visible),
         range_label=f"{fmt_short_date(show_from.date())} – {fmt_short_date(last_day)}",
         updated_label=f"{fetched_local:%a} {fmt_time(fetched_local)}",
         failed=failed,
@@ -453,6 +425,114 @@ async def index(
         days=days,
     )
     return HTMLResponse(page, headers=NO_CACHE)
+
+# --------------------------------------------------------------------------- #
+# iCalendar feed
+# --------------------------------------------------------------------------- #
+
+_BR = re.compile(r"<br\s*/?>", re.I)
+_TAG = re.compile(r"<[^>]+>")
+
+
+def _ics_text(value: str) -> str:
+    """Escape a TEXT value per RFC 5545 §3.3.11."""
+    return (
+        value.replace("\\", "\\\\")
+        .replace(";", "\\;")
+        .replace(",", "\\,")
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
+        .replace("\n", "\\n")
+    )
+
+
+def _ics_fold(line: str) -> str:
+    """Fold to <=75 octets per line without splitting multibyte characters."""
+    if len(line.encode()) <= 75:
+        return line
+    parts: list[str] = []
+    cur: list[str] = []
+    size, limit = 0, 75
+    for ch in line:
+        n = len(ch.encode())
+        if size + n > limit:
+            parts.append("".join(cur))
+            cur, size, limit = [ch], n, 74  # continuation lines start with a space
+        else:
+            cur.append(ch)
+            size += n
+    parts.append("".join(cur))
+    return "\r\n ".join(parts)
+
+
+def _ics_dt(dt: datetime) -> str:
+    return dt.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+
+def _body_to_text(body: str) -> str:
+    return html.unescape(_TAG.sub("", _BR.sub("\n", str(body)))).strip()
+
+
+def build_ics(events: list[Event], stamp: datetime) -> str:
+    dtstamp = _ics_dt(stamp)
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Uni Timetable//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "X-WR-CALNAME:Uni Timetable",
+        f"X-WR-TIMEZONE:{LOCAL_TZ.key}",
+        "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
+        "X-PUBLISHED-TTL:PT1H",
+    ]
+
+    seen: Counter[str] = Counter()
+    for e in events:
+        key = f"{_ics_dt(e.start)}|{_ics_dt(e.end)}|{e.subject}|{e.location}"
+        digest = hashlib.sha1(key.encode()).hexdigest()
+        seen[digest] += 1  # disambiguate genuinely identical events
+        uid = f"{digest}-{seen[digest]}@uni-timetable"
+
+        lines += [
+            "BEGIN:VEVENT",
+            f"UID:{uid}",
+            f"DTSTAMP:{dtstamp}",
+            f"DTSTART:{_ics_dt(e.start)}",
+            f"DTEND:{_ics_dt(e.end)}",
+            f"SUMMARY:{_ics_text(e.subject)}",
+        ]
+        if e.location:
+            lines.append(f"LOCATION:{_ics_text(e.location)}")
+        if description := _body_to_text(e.body):
+            lines.append(f"DESCRIPTION:{_ics_text(description)}")
+        if e.categories:
+            lines.append("CATEGORIES:" + ",".join(_ics_text(c) for c in e.categories))
+        lines.append("END:VEVENT")
+
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(_ics_fold(l) for l in lines) + "\r\n"
+
+
+@app.get("/calendar.ics")
+async def calendar_ics():
+    if _cache.events is None:
+        return Response(
+            "Calendar not loaded yet\n",
+            status_code=503,
+            media_type="text/plain",
+            headers={**NO_CACHE, "Retry-After": "60"},
+        )
+
+    body = build_ics(_cache.events, _cache.fetched_at or datetime.now(timezone.utc))
+    return Response(
+        body,
+        media_type="text/calendar; charset=utf-8",
+        headers={
+            **NO_CACHE,
+            "Content-Disposition": 'inline; filename="timetable.ics"',
+        },
+    )
 
 
 def main() -> None:
