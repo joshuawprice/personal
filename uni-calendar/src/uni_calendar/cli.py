@@ -64,16 +64,22 @@ async def fetch_items(start: str, end: str) -> bytes:
         return cached[1]
 
     flt = f"End gt datetime'{start}' and Start lt datetime'{end}'"
-
     url = f"{BASE}?$filter={quote(flt, safe=':')}"
 
     client: httpx2.AsyncClient = app.state.client
+    session: MydaySession = app.state.session
 
-    response = await client.get(url)
+    access_code = session.access_code
+    if not access_code:
+        raise httpx2.HTTPError("MyDay session has no access code")
+
+    response = await client.get(
+        url,
+        headers={"Authorization": f"Bearer {access_code}"},
+    )
     response.raise_for_status()
 
     data = response.content
-
     _cache[key] = (time.monotonic(), data)
 
     return data
