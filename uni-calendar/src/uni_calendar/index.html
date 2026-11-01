@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="refresh" content="{{ refresh_seconds }}">
     <title>My Timetable</title>
     <style>
         :root {
@@ -61,13 +62,23 @@
         }
 
         input,
-        select {
+        select,
+        button {
             font: inherit;
             padding: 6px 8px;
             border: 1px solid var(--bd);
             border-radius: 6px;
             background: var(--card);
             color: var(--fg)
+        }
+
+        button {
+            cursor: pointer
+        }
+
+        .clear {
+            align-self: center;
+            font-size: 13px
         }
 
         h2 {
@@ -95,7 +106,7 @@
         }
 
         .time {
-            min-width: 96px;
+            min-width: 120px;
             font-variant-numeric: tabular-nums;
             color: var(--mute)
         }
@@ -148,144 +159,54 @@
 <body>
     <main>
         <h1>My Timetable</h1>
-        <div class="bar">
-            <label>Module<select id="mod">
+
+        <form class="bar" method="get" action="/">
+            <label>Module
+                <select name="module" onchange="this.form.submit()">
                     <option value="">All</option>
-                </select></label>
-            <label>Search<input id="q" placeholder="text…"></label>
+                    {% for m in modules %}
+                    <option value="{{ m }}" {% if m==module %} selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Search<input type="search" name="q" value="{{ q }}" placeholder="text…"></label>
+            <button type="submit">Filter</button>
+            {% if module or q %}<a class="clear" href="/">Clear</a>{% endif %}
+        </form>
+
+        <div id="status">
+            {% if loaded %}
+            {{ count }} event(s) · {{ range_label }} · updated {{ updated_label }}
+            {% else %}
+            Timetable not loaded yet. This page will retry automatically.
+            {% endif %}
+            {% if failed %}
+            <span class="warn">Today's scheduled refresh hasn't completed yet. Showing the last saved timetable.</span>
+            {% endif %}
+            {% if error %}
+            <span class="warn">Last fetch error: {{ error }}</span>
+            {% endif %}
         </div>
-        <div id="status"></div>
-        <div id="list"></div>
+
+        <div id="list">
+            {% if loaded and not days %}
+            <p class="empty">No events.</p>
+            {% endif %}
+            {% for day in days %}
+            <h2{% if day.is_today %} class="today" {% endif %}>{{ day.title }}</h2>
+                {% for ev in day.events %}
+                <div class="ev" style="--c: {{ ev.color }}">
+                    <div class="time">{{ ev.time }}</div>
+                    <div>
+                        <div class="subj">{{ ev.subject }}{% for c in ev.categories %}<span class="tag">{{ c }}</span>{% endfor %}</div>
+                        <div class="meta">📍 {{ ev.location or "—" }}</div>
+                        {% if ev.body %}<div class="body">{{ ev.body }}</div>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% endfor %}
+        </div>
     </main>
-    <script>
-        const $ = id => document.getElementById(id);
-        const dayKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-        const COLORS = ["#2563eb", "#16a34a", "#d97706", "#db2777", "#7c3aed", "#0891b2"];
-
-        const CUTOFF_HOUR = 18;              // keep in sync with DAY_CUTOFF on the server
-        const REFRESH_MS = 5 * 60 * 1000;    // how often to re-poll the server's cached copy
-        const TICK_MS = 30 * 1000;           // how often to check whether 6pm / midnight has passed
-
-        let items = [], meta = null, lastError = null, lastSig = "";
-
-        const tFmt = new Intl.DateTimeFormat([], { hour: "2-digit", minute: "2-digit" });
-        const dFmt = new Intl.DateTimeFormat([], { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-        const sFmt = new Intl.DateTimeFormat([], { weekday: "short", day: "numeric", month: "short" });
-        const uFmt = new Intl.DateTimeFormat([], { weekday: "short", hour: "2-digit", minute: "2-digit" });
-
-        const startOfDay = (d, addDays = 0) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() + addDays); return x; };
-
-        // First day to show, using the same rule as the server: from 6pm, today is done.
-        const localFirstDay = (now = new Date()) => startOfDay(now, now.getHours() >= CUTOFF_HOUR ? 1 : 0);
-
-        // Effective start of the display: the later of the server's window and the local 6pm rule.
-        // This hides today's entries at 6pm even if the server's refresh hasn't happened / failed.
-        const displayFrom = (now = new Date()) =>
-            new Date(Math.max(meta && meta.start ? meta.start.getTime() : 0, localFirstDay(now).getTime()));
-
-        const hdrDate = (r, name) => { const v = r.headers.get(name); return v ? new Date(v) : null; };
-
-        // Keep only text, <br>, and mailto links from the API's HTML body
-        function clean(html) {
-            const doc = new DOMParser().parseFromString(html || "", "text/html"), out = document.createDocumentFragment();
-            (function walk(n, p) {
-                n.childNodes.forEach(c => {
-                    if (c.nodeType === 3) p.append(c.textContent);
-                    else if (c.nodeName === "BR") p.append(document.createElement("br"));
-                    else if (c.nodeName === "A" && /^mailto:/i.test(c.getAttribute("href") || "")) {
-                        const a = document.createElement("a"); a.href = c.getAttribute("href"); a.textContent = c.textContent; p.append(a);
-                    } else walk(c, p);
-                });
-            })(doc.body, out);
-            return out;
-        }
-        const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
-
-        async function load(quiet = false) {
-            if (!quiet) $("status").textContent = "Loading…";
-            try {
-                const r = await fetch("/api/calendar", { cache: "no-store" });
-                if (!r.ok) {
-                    let msg = r.status + " " + r.statusText;
-                    try { msg = (await r.json()).detail || msg; } catch { }
-                    throw new Error(msg);
-                }
-                const data = await r.json();
-                meta = {
-                    start: hdrDate(r, "X-Calendar-Start"),
-                    end: hdrDate(r, "X-Calendar-End"),
-                    fetchedAt: hdrDate(r, "X-Calendar-Fetched-At"),
-                    stale: r.headers.get("X-Calendar-Stale") === "true",
-                };
-                items = (data.results || []).map(i => ({ ...i, s: new Date(i.Start), e: new Date(i.End) })).sort((a, b) => a.s - b.s);
-                lastError = null;
-                render();
-            } catch (err) {
-                lastError = err.message;
-                if (meta) render();  // keep showing what we have, with a warning
-                else $("status").textContent = "Error: " + err.message;
-            }
-        }
-
-        function render() {
-            if (!meta) return;
-            const now = new Date(), from = displayFrom(now);
-            lastSig = dayKey(now) + "|" + from.getTime();
-
-            // Drop anything that has finished before the display start (e.g. today's entries after 6pm)
-            const visible = items.filter(i => i.e > from);
-
-            // Module dropdown reflects what's actually visible
-            const mods = [...new Set(visible.map(i => i.Subject))].sort(), cur = $("mod").value;
-            $("mod").replaceChildren(new Option("All", ""), ...mods.map(m => new Option(m, m)));
-            $("mod").value = mods.includes(cur) ? cur : "";
-
-            const m = $("mod").value, q = $("q").value.toLowerCase();
-            const rows = visible.filter(i => (!m || i.Subject === m) && (!q || JSON.stringify(i).toLowerCase().includes(q)));
-            const colors = {};[...new Set(items.map(i => i.Subject))].sort().forEach((s, k) => colors[s] = COLORS[k % COLORS.length]);
-
-            // Status line
-            const parts = [`${rows.length} event(s)`];
-            if (meta.end) parts.push(`${sFmt.format(from)} – ${sFmt.format(new Date(meta.end.getTime() - 1))}`);
-            if (meta.fetchedAt) parts.push(`updated ${uFmt.format(meta.fetchedAt)}`);
-            const status = $("status"); status.replaceChildren(parts.join(" · "));
-            if (meta.stale) status.append(el("span", "warn", "Today's scheduled refresh hasn't completed yet. Showing the last saved timetable."));
-            if (lastError) status.append(el("span", "warn", "Couldn't reach the server: " + lastError));
-
-            const list = $("list"); list.replaceChildren();
-            if (!rows.length) { list.append(el("p", "empty", "No events.")); return; }
-
-            const today = dayKey(now), tomorrow = dayKey(startOfDay(now, 1)); let last = "";
-            for (const i of rows) {
-                const k = dayKey(i.s);
-                if (k !== last) {
-                    last = k;
-                    const label = k === today ? " (today)" : k === tomorrow ? " (tomorrow)" : "";
-                    list.append(el("h2", k === today ? "today" : "", dFmt.format(i.s) + label));
-                }
-                const ev = el("div", "ev"); ev.style.setProperty("--c", colors[i.Subject]);
-                ev.append(el("div", "time", `${tFmt.format(i.s)} – ${tFmt.format(i.e)}`));
-                const d = el("div");
-                const t = el("div", "subj", i.Subject);
-                (i.Categories || []).forEach(c => t.append(el("span", "tag", c)));
-                d.append(t, el("div", "meta", "📍 " + (i.Location || "—")));
-                const b = el("div", "body"); b.append(clean(i.Body)); d.append(b);
-                ev.append(d); list.append(ev);
-            }
-        }
-
-        $("mod").onchange = render;
-        $("q").oninput = render;
-
-        // Pick up the server's daily refresh without a manual reload
-        setInterval(() => load(true), REFRESH_MS);
-        // Re-render when 6pm or midnight passes (only if the visible range/today actually changed)
-        setInterval(() => { if (meta && dayKey(new Date()) + "|" + displayFrom().getTime() !== lastSig) render(); }, TICK_MS);
-        // Refresh after the tab/laptop wakes up
-        document.addEventListener("visibilitychange", () => { if (!document.hidden) load(true); });
-
-        load();
-    </script>
 </body>
 
 </html>
