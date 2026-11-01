@@ -182,3 +182,12 @@ resource "cloudflare_dns_record" "oldasgard" {
   content = "18.130.45.87"
   proxied = false
 }
+
+resource "cloudflare_dns_record" "cal" {
+  zone_id = "d4559b15079141dd3ce0f9332a07c571"
+  name    = "cal.jprice.uk"
+  ttl     = 1
+  type    = "CNAME"
+  content = cloudflare_dns_record.asgard.name
+  proxied = false
+}
