@@ -1,0 +1,24 @@
+{
+  "authorize_url": "https://auth.myday.cloud/connect/authorize?client_id=myday-web-4e0f11f9-046e-4505-9cb8-db2152311e21&scope=openid%20profile%20email%20myday_id%20myday_api%20scim.user_access%20session.user_access%20tenant_api.user_access%20domain_api.user_access%20analytics_api.user_access%20oauth.user_access%20identity_management.user_access%20offline_access&redirect_uri=https%3A%2F%2Fuwtsd.myday.cloud%2Fsession%2Fcallback&response_type=code%20id_token&state=eyJub25jZSI6Ik4wLjExNTg1NDUxMzQ1OTcxMzY1MTc5MjUyOTIwODA4MyIsInBhdGgiOiIvIn0%3D&code_challenge=ykbpbvHEAtop9RkzyvdbcjgRt7ZVys-QNTi6SYMc_84&code_challenge_method=S256&nonce=N0.115854513459713651792529208083&acr_values=tenant%3A4e0f11f9-046e-4505-9cb8-db2152311e21",
+  "auth_cookies": {"idsrv": "CfDJ8Dk6GsltkpFCnD337rgExXprEXjZ6NlCqu9eD68ytLBHqSfg1-9gH7WrPbZeR1GafqJAx2Ue4X_ZYMsif87ttje9xcUjkZkf1xFauuTMUz6PC7prvn77HISFe5vjwzIuqVFNzGCpp8MB7DyopMQLnw1GytgJN7Fn8p6yyvNeVGQ1v5TMpN-27kSqE5l3KOG91BsReKAlMleKqMlHPBlP9oUnMuGM5VAFFfyYkZq7TgxiKv2OLP0kvSE6eoP3g80MsEP4qJqXp6cQxulhMyKuOpwZRvjSHMgKiwC3_1CBVKyqjMX_kHAAqoFIYQzB94GPyCUaO6p7HCyrjTBtJECjsMrcGw4tBB4FDfrSgEDDnoNy_IfDprbvJWXI5JSStfm_k_upaLSQroXrKVVijT7rYw2_l3D9EPErxSIfgfiO7mcwWRdh1ri_vg29Fj-7gkBJ19hZjFFUrGxX79yC200Cx221vLCsEE1Jz8meRiSG0AqC5NcwHNjM2kl1ymZNBNBAhy07gpcrvX25F3csgSYRfmXGwTji68trYrTtD2J1on2jwPVBa-DmUm1vt8qsrN8mFEZgqtivw8OaEdeh3oL8gSZtZX76iuADocrW0kAmud-aIYrKCXZ9nzPLD5zh-1v2NjVvUo1YBFzlwBhULvWWyEWKstbxL1iLmQtTqb3ng_cyEMuM0NkrQpiR1ETPQ_MtKrvfpb3XChVItil_xH2wmS8PC3DP8UHZBY8MuEBW2aibG0IzZhwZQU8S35nGuLqnt5OcnDl9vCJAT-LgjHKFteuHFCpb7E9KaNbJR4oOGxX931PMEzsTgTw9xHUf4JrkBrHY2cbIyRjxjh0UWqXnvlGI6tI64Qoa70AqTdHG75O_LF7LyYqynGXo_A5i78tBXHue6YI8tuEf0FvT_17ImMy_5oFN-ywPYQbWs5qO7q6TvzOXUEGp1b1Vq9OFskZOhg" },
+  "token_url": "https://api.myday.cloud/sessions/token",
+  "api_url": "https://api.myday.cloud/legacy/api/aggregate/v2/calendaritem?$filter=End%20gt%20datetime%272026-09-28T00:00:00Z%27%20and%20Start%20lt%20datetime%272026-11-09T00:00:00Z%27",
+  "extra_headers": {
+  "accept": "application/json, text/plain, */*",
+  "accept-language": "en-GB,en;q=0.5",
+  "cache-control": "no-cache",
+  "origin": "https://hwb.uwtsd.ac.uk",
+  "pragma": "no-cache",
+  "priority": "u=1, i",
+  "referer": "https://hwb.uwtsd.ac.uk/",
+  "sec-ch-ua": "\"Brave\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+  "sec-ch-ua-mobile": "?0",
+  "sec-ch-ua-platform": "\"Linux\"",
+  "sec-fetch-dest": "empty",
+  "sec-fetch-mode": "cors",
+  "sec-fetch-site": "cross-site",
+  "sec-gpc": "1",
+  "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36"
+	}
+}
+

@@ -1,0 +1,18 @@
+curl --url 'https://api.myday.cloud/sessions/token' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: en-GB,en;q=0.5' \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/x-www-form-urlencoded' \
+  -H 'origin: https://hwb.uwtsd.ac.uk' \
+  -H 'pragma: no-cache' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://hwb.uwtsd.ac.uk/' \
+  -H 'sec-ch-ua: "Brave";v="155", "Chromium";v="155", "Not(A:Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Linux"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: cross-site' \
+  -H 'sec-gpc: 1' \
+  -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36' \
+  --data-raw 'grant_type=authorization_code&client_id=myday-web-4e0f11f9-046e-4505-9cb8-db2152311e21&redirect_uri=https%3A%2F%2Fhwb.uwtsd.ac.uk%2Fsession%2Fcallback&code=247BBC86A33315F8F8178125456B2BE177A8606EF86449B478914C35DB0CED73-1&code_verifier=bRk9eFeAmungcsZYttI5ulY2G0F1eqcXta4anL68nns&id_token=eyJhbGciOiJSUzI1NiIsImtpZCI6IjgwREU5MzQ2RjA5MEFGMDI4MjUwRjUyNzQ1QjMwMjkwMDYyM0RBQ0VSUzI1NiIsIng1dCI6ImdONlRSdkNRcndLQ1VQVW5SYk1Da0FZajJzNCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGgubXlkYXkuY2xvdWQiLCJuYmYiOjE3OTI1MzM4ODAsImlhdCI6MTc5MjUzMzg4MCwiZXhwIjoxNzkyNjIwMjgwLCJhdWQiOiJteWRheS13ZWItNGUwZjExZjktMDQ2ZS00NTA1LTljYjgtZGIyMTUyMzExZTIxIiwiYW1yIjpbImV4dGVybmFsIl0sIm5vbmNlIjoiTjAuMTMxMTU2MDk5MDEyNDA2NzcxNzkyNTMzODcwNjU4IiwiY19oYXNoIjoiQWZ6U3Z6MTRNcUhpT2tlNjRNT1c0QSIsInNpZCI6IjE5QTI5MEJEODQxQzg3RTE5RERDQUY4QTFCQTVCQkQwIiwic3ViIjoiNmEwMDViNGQtMWM3ZS00MzM0LTg4NTUtMzI1NjZlZDc3MDZiIiwiYXV0aF90aW1lIjoxNzkyNTMzODc5LCJpZHAiOiJhYWQiLCJteWRheV9zaWQiOiIxOUEyOTBCRDg0MUM4N0UxOUREQ0FGOEExQkE1QkJEMCIsInJvbGUiOiJzdGQiLCJ0ZW5hbnQiOiI0ZTBmMTFmOS0wNDZlLTQ1MDUtOWNiOC1kYjIxNTIzMTFlMjEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiIyNjIwNjUzQHN0dWRlbnQudXd0c2QuYWMudWsiLCJnaXZlbl9uYW1lIjoiSm9zaHVhIiwiZmFtaWx5X25hbWUiOiJQcmljZSIsIm5hbWUiOiJKb3NodWEgUHJpY2UgKDI2MjA2NTMpIiwiZW1haWwiOiIyNjIwNjUzQHN0dWRlbnQudXd0c2QuYWMudWsiLCJ1cGRhdGVkX2F0IjoiMjAyNi0wOS0yOVQxNDo0MjozOFoiLCJyb2xlX3Blcm1pc3Npb24iOlsiVGVuYW50UmVhZCIsIlVzZXJSZWFkIl0sIl9jbGFpbV9uYW1lcyI6eyJncm91cHMiOiJzcmMxIn0sIl9jbGFpbV9zb3VyY2VzIjp7InNyYzEiOnsiZW5kcG9pbnQiOiJodHRwczovL2F1dGgubXlkYXkuY2xvdWQvYXBpL2dyb3Vwc19jbGFpbXMifX19.SkucfvcfPyVoVcXDMyJCZn791r_MVXfmY-EecSOiGbGCFyh1rZgx3PUGPXVdUBJnCLvbGAfvovDltgKcsMJn-xpy0OZ20liEBAe5x8blyKKZPm7yeIhPrrU-11VgXUU46cnrM2GgMrlrhrtgl9WAn-sPZqcAtpbSEk7iH9VCFravzqk7ryk-dwlpr_Gb1J_oOgncMHGgng5KBk6ULICwZjlWd1YTwVEyVDUn1BkqszSmRBYH2zD-dz4hWTf2igJAV1eFBT9a7VNZ86Fg_Y6qbMCV7nTJeRKcqdA18OMZbI6VZ8VueBCSq88FAWuUEKmdS_fMHZtCUEd8ufdOjJRiFgk4C_-Q6CVXoX2YaXuvTVtPusq2qxSbDCiiL13pFSlxYtt9qhyAtDi_uKg8398b0TZgJ-c_J6doJgLojifjU12-iuWzXs1sIwqFVhzBmvPQoqL83NY0FWRb2tUObdUXyc4Yii_HxKH7hLXuM9Ik1a5xki0Qlobv0B6mZzavbrXpiozAkok_oRTvl1OJUC_bKtvMzj6tTbIbNb6kakflp_2xOYJHtvRGKSMeEwMGzc7O4JaKzCGdLWCQYco5kqURY6liO-5TZzwcbHV23zyqEQdOeq1v1QBlrNuzYY1IgIMeVvK3rMGGOCc85nVbEo5Fv-3VJTMPcGGyBo4dvtL2My4'

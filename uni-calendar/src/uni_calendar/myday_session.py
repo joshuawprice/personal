@@ -4,7 +4,7 @@ import os
 from datetime import UTC, datetime, timedelta
 from urllib.parse import quote
 
-import httpx
+import httpx2
 
 API = "https://api.myday.cloud"
 TOKEN_URL = f"{API}/sessions/token"
@@ -21,7 +21,7 @@ log = logging.getLogger("myday")
 class MydaySession:
     def __init__(
         self,
-        client: httpx.AsyncClient,
+        client: httpx2.AsyncClient,
         *,
         session_id: str,
         id_token: str,
@@ -90,7 +90,7 @@ class MydaySession:
                     await self.session_extend()
                 backoff = 5
                 delay = max(expires_in - TOKEN_MARGIN_SECS, 30)
-            except httpx.HTTPError as e:
+            except httpx2.HTTPError as e:
                 log.warning("request failed: %r; retry in %ss", e, backoff)
                 delay = backoff
                 backoff = min(backoff * 2, MAX_BACKOFF_SECS)
@@ -110,8 +110,8 @@ class MydaySession:
         return r.json()
 
 
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        pass
+# if __name__ == "__main__":
+#     try:
+#         asyncio.run(main())
+#     except KeyboardInterrupt:
+#         pass

@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from urllib.parse import quote
 
-import httpx
+import httpx2
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse, Response
@@ -28,8 +28,8 @@ _cache: dict[tuple[str, str], tuple[float, bytes]] = {}
 
 @app.on_event("startup")
 async def startup() -> None:
-    client = httpx.AsyncClient(
-        timeout=httpx.Timeout(30.0),
+    client = httpx2.AsyncClient(
+        timeout=httpx2.Timeout(30.0),
     )
 
     session = MydaySession(
@@ -67,7 +67,7 @@ async def fetch_items(start: str, end: str) -> bytes:
 
     url = f"{BASE}?$filter={quote(flt, safe=':')}"
 
-    client: httpx.AsyncClient = app.state.client
+    client: httpx2.AsyncClient = app.state.client
 
     response = await client.get(url)
     response.raise_for_status()
@@ -93,13 +93,13 @@ async def calendar(
         payload = await fetch_items(start, end)
         return Response(payload, media_type="application/json")
 
-    except httpx.HTTPStatusError as ex:
+    except httpx2.HTTPStatusError as ex:
         raise HTTPException(
             status_code=ex.response.status_code,
             detail=f"Upstream error: {ex.response.reason_phrase}",
         ) from ex
 
-    except httpx.HTTPError as ex:
+    except httpx2.HTTPError as ex:
         raise HTTPException(
             status_code=502,
             detail=str(ex),
