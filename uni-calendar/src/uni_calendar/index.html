@@ -12,6 +12,7 @@
             --fg: #1d2230;
             --mute: #6b7280;
             --acc: #2563eb;
+            --warn: #b45309;
             --bd: #e3e6ee
         }
 
@@ -22,6 +23,7 @@
                 --fg: #e6e8ee;
                 --mute: #9aa1b0;
                 --acc: #6ea0ff;
+                --warn: #f59e0b;
                 --bd: #2c303c
             }
         }
@@ -59,21 +61,13 @@
         }
 
         input,
-        select,
-        button {
+        select {
             font: inherit;
             padding: 6px 8px;
             border: 1px solid var(--bd);
             border-radius: 6px;
             background: var(--card);
             color: var(--fg)
-        }
-
-        button {
-            background: var(--acc);
-            color: #fff;
-            border: 0;
-            cursor: pointer
         }
 
         h2 {
@@ -137,6 +131,17 @@
             color: var(--mute);
             margin: 8px 0
         }
+
+        .warn {
+            display: block;
+            color: var(--warn);
+            font-size: 13px;
+            margin-top: 2px
+        }
+
+        .empty {
+            color: var(--mute)
+        }
     </style>
 </head>
 
@@ -144,13 +149,10 @@
     <main>
         <h1>My Timetable</h1>
         <div class="bar">
-            <label>From<input type="date" id="from"></label>
-            <label>To<input type="date" id="to"></label>
             <label>Module<select id="mod">
                     <option value="">All</option>
                 </select></label>
             <label>Search<input id="q" placeholder="text…"></label>
-            <button id="go">Load</button>
         </div>
         <div id="status"></div>
         <div id="list"></div>
@@ -159,15 +161,29 @@
         const $ = id => document.getElementById(id);
         const dayKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
         const COLORS = ["#2563eb", "#16a34a", "#d97706", "#db2777", "#7c3aed", "#0891b2"];
-        let items = [];
 
-        // default range: this week's Monday -> +6 weeks (local dates)
-        const now = new Date(), mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-        const end = new Date(mon); end.setDate(mon.getDate() + 42);
-        $("from").value = dayKey(mon); $("to").value = dayKey(end);
+        const CUTOFF_HOUR = 18;              // keep in sync with DAY_CUTOFF on the server
+        const REFRESH_MS = 5 * 60 * 1000;    // how often to re-poll the server's cached copy
+        const TICK_MS = 30 * 1000;           // how often to check whether 6pm / midnight has passed
+
+        let items = [], meta = null, lastError = null, lastSig = "";
 
         const tFmt = new Intl.DateTimeFormat([], { hour: "2-digit", minute: "2-digit" });
         const dFmt = new Intl.DateTimeFormat([], { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+        const sFmt = new Intl.DateTimeFormat([], { weekday: "short", day: "numeric", month: "short" });
+        const uFmt = new Intl.DateTimeFormat([], { weekday: "short", hour: "2-digit", minute: "2-digit" });
+
+        const startOfDay = (d, addDays = 0) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() + addDays); return x; };
+
+        // First day to show, using the same rule as the server: from 6pm, today is done.
+        const localFirstDay = (now = new Date()) => startOfDay(now, now.getHours() >= CUTOFF_HOUR ? 1 : 0);
+
+        // Effective start of the display: the later of the server's window and the local 6pm rule.
+        // This hides today's entries at 6pm even if the server's refresh hasn't happened / failed.
+        const displayFrom = (now = new Date()) =>
+            new Date(Math.max(meta && meta.start ? meta.start.getTime() : 0, localFirstDay(now).getTime()));
+
+        const hdrDate = (r, name) => { const v = r.headers.get(name); return v ? new Date(v) : null; };
 
         // Keep only text, <br>, and mailto links from the API's HTML body
         function clean(html) {
@@ -185,31 +201,68 @@
         }
         const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
 
-        async function load() {
-            $("status").textContent = "Loading…";
-            const s = $("from").value + "T00:00:00Z", e = $("to").value + "T00:00:00Z";
+        async function load(quiet = false) {
+            if (!quiet) $("status").textContent = "Loading…";
             try {
-                const r = await fetch(`/api/calendar?start=${s}&end=${e}`);
-                if (!r.ok) throw new Error(r.status + " " + await r.text());
+                const r = await fetch("/api/calendar", { cache: "no-store" });
+                if (!r.ok) {
+                    let msg = r.status + " " + r.statusText;
+                    try { msg = (await r.json()).detail || msg; } catch { }
+                    throw new Error(msg);
+                }
                 const data = await r.json();
+                meta = {
+                    start: hdrDate(r, "X-Calendar-Start"),
+                    end: hdrDate(r, "X-Calendar-End"),
+                    fetchedAt: hdrDate(r, "X-Calendar-Fetched-At"),
+                    stale: r.headers.get("X-Calendar-Stale") === "true",
+                };
                 items = (data.results || []).map(i => ({ ...i, s: new Date(i.Start), e: new Date(i.End) })).sort((a, b) => a.s - b.s);
-                const mods = [...new Set(items.map(i => i.Subject))].sort(), cur = $("mod").value;
-                $("mod").replaceChildren(new Option("All", ""), ...mods.map(m => new Option(m, m)));
-                $("mod").value = mods.includes(cur) ? cur : "";
+                lastError = null;
                 render();
-            } catch (err) { $("status").textContent = "Error: " + err.message; }
+            } catch (err) {
+                lastError = err.message;
+                if (meta) render();  // keep showing what we have, with a warning
+                else $("status").textContent = "Error: " + err.message;
+            }
         }
 
         function render() {
+            if (!meta) return;
+            const now = new Date(), from = displayFrom(now);
+            lastSig = dayKey(now) + "|" + from.getTime();
+
+            // Drop anything that has finished before the display start (e.g. today's entries after 6pm)
+            const visible = items.filter(i => i.e > from);
+
+            // Module dropdown reflects what's actually visible
+            const mods = [...new Set(visible.map(i => i.Subject))].sort(), cur = $("mod").value;
+            $("mod").replaceChildren(new Option("All", ""), ...mods.map(m => new Option(m, m)));
+            $("mod").value = mods.includes(cur) ? cur : "";
+
             const m = $("mod").value, q = $("q").value.toLowerCase();
-            const rows = items.filter(i => (!m || i.Subject === m) && (!q || JSON.stringify(i).toLowerCase().includes(q)));
+            const rows = visible.filter(i => (!m || i.Subject === m) && (!q || JSON.stringify(i).toLowerCase().includes(q)));
             const colors = {};[...new Set(items.map(i => i.Subject))].sort().forEach((s, k) => colors[s] = COLORS[k % COLORS.length]);
+
+            // Status line
+            const parts = [`${rows.length} event(s)`];
+            if (meta.end) parts.push(`${sFmt.format(from)} – ${sFmt.format(new Date(meta.end.getTime() - 1))}`);
+            if (meta.fetchedAt) parts.push(`updated ${uFmt.format(meta.fetchedAt)}`);
+            const status = $("status"); status.replaceChildren(parts.join(" · "));
+            if (meta.stale) status.append(el("span", "warn", "Today's scheduled refresh hasn't completed yet. Showing the last saved timetable."));
+            if (lastError) status.append(el("span", "warn", "Couldn't reach the server: " + lastError));
+
             const list = $("list"); list.replaceChildren();
-            $("status").textContent = `${rows.length} event(s)`;
-            const today = dayKey(new Date()); let last = "";
+            if (!rows.length) { list.append(el("p", "empty", "No events.")); return; }
+
+            const today = dayKey(now), tomorrow = dayKey(startOfDay(now, 1)); let last = "";
             for (const i of rows) {
                 const k = dayKey(i.s);
-                if (k !== last) { last = k; list.append(el("h2", k === today ? "today" : "", dFmt.format(i.s) + (k === today ? " (today)" : ""))); }
+                if (k !== last) {
+                    last = k;
+                    const label = k === today ? " (today)" : k === tomorrow ? " (tomorrow)" : "";
+                    list.append(el("h2", k === today ? "today" : "", dFmt.format(i.s) + label));
+                }
                 const ev = el("div", "ev"); ev.style.setProperty("--c", colors[i.Subject]);
                 ev.append(el("div", "time", `${tFmt.format(i.s)} – ${tFmt.format(i.e)}`));
                 const d = el("div");
@@ -220,7 +273,17 @@
                 ev.append(d); list.append(ev);
             }
         }
-        $("go").onclick = load; $("mod").onchange = render; $("q").oninput = render;
+
+        $("mod").onchange = render;
+        $("q").oninput = render;
+
+        // Pick up the server's daily refresh without a manual reload
+        setInterval(() => load(true), REFRESH_MS);
+        // Re-render when 6pm or midnight passes (only if the visible range/today actually changed)
+        setInterval(() => { if (meta && dayKey(new Date()) + "|" + displayFrom().getTime() !== lastSig) render(); }, TICK_MS);
+        // Refresh after the tab/laptop wakes up
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) load(true); });
+
         load();
     </script>
 </body>
